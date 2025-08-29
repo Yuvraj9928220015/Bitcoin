@@ -8,43 +8,43 @@ const slides = [
     {
         src: '/download-1.png',
         alt: 'B.zero1 Necklace',
-        topText: 'New Arrival',
+        topText: 'New',
         bottomText: 'B.zero1 Necklace'
     },
     {
         src: '/download-2.png',
         alt: 'Serpenti Ring',
-        topText: 'New Arrival',
+        topText: 'New',
         bottomText: 'Serpenti Ring'
     },
     {
         src: '/download-3.png',
         alt: 'Octo Watch',
-        topText: 'New Arrival',
+        topText: 'New',
         bottomText: 'Octo Finissimo'
     },
     {
         src: '/download-4.png',
         alt: 'Fiorever Earrings',
-        topText: 'New Arrival',
+        topText: 'New',
         bottomText: 'Fiorever Earrings'
     },
     {
         src: '/download-5.png',
         alt: 'Divas',
-        topText: 'New Arrival',
+        topText: 'New',
         bottomText: 'Fiorever Earrings'
     },
     {
         src: '/download-6.png',
         alt: 'Bvlgari Aluminium',
-        topText: 'New Arrival',
+        topText: 'New',
         bottomText: 'Aluminium Watch'
     },
     {
         src: '/download-7.png',
         alt: 'Parentesi Bracelet',
-        topText: 'New Arrival',
+        topText: 'New',
         bottomText: 'Parentesi Bracelet'
     },
 ];
@@ -67,16 +67,16 @@ export default function Slider() {
                 speed: 800,
                 easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                 breakpoints: {
-                    992: {
+                    1200: {
                         perPage: 3,
-                        gap: '0.8rem',
-                        focus: 'center',
-                    },
-                    576: {
-                        perPage: 1,
                         gap: '0.5rem',
                         focus: 'center',
                     },
+                    992: {
+                        perPage: 1,
+                        gap: '0.8rem',
+                        focus: 'center',
+                    }
                 },
             });
 

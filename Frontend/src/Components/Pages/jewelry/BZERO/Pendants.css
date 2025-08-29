@@ -7,6 +7,8 @@
 .bzero-page-container {
     position: relative;
     width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
 }
 
 .bzero-main-content {
@@ -23,19 +25,21 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: 3rem 2rem;
-    margin-top: 30px;
+    padding: 0px 2rem;
+    padding-top: 3.8rem;
+    padding-bottom: 0.7rem;
+    margin-top: 20px;
 }
 
 .bzero-header-left .breadcrumb {
     font-size: 0.9rem;
     color: #555;
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
 }
 
 .bzero-header-left .bzero-title {
-    font-size: 2.8rem;
+    font-size: 2rem;
     font-weight: 300;
     color: #000;
 }
@@ -61,6 +65,8 @@
 
 .product-grid {
     display: flex;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
 .product-grid-left {
@@ -72,34 +78,54 @@
 .product-grid-right {
     flex: 1;
     min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid #e0e0e0;
 }
 
 .hero-image-container {
     width: 100%;
     height: 100%;
     position: relative;
+    /* Removed max-height here, let it be controlled by parent or object-fit */
 }
 
 .hero-image-container img {
     width: 100%;
     min-height: 100%;
-    max-height: 100vh;
+    max-height: 100%;
     object-fit: cover;
+    display: block;
 }
 
+.niche-grid-container {
+    width: 100%;
+    margin-top: 20px;
+}
 
 .niche-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    border: 1px solid #e0e0e0;
 }
 
 .product-card {
     position: relative;
     overflow: hidden;
     cursor: pointer;
-    min-height: 600px;
+    min-height: 680px;
+    margin: 0px;
 }
+
+.product-grid-left .product-card:first-child,
+.product-grid-left .product-card:nth-child(2) {
+    border-top: none;
+}
+
+.product-grid-left .product-card:nth-child(2n+1) {
+    border-left: none;
+}
+
 
 .product-image,
 .product-video {
@@ -123,28 +149,28 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    padding: 4rem 1.5rem 1.5rem 1.5rem;
+    padding: 2rem 1rem 1rem 1rem;
     z-index: 3;
     color: #fff;
     background: linear-gradient(to top, #00000080, transparent);
 }
 
 .product-material {
-    font-size: 13px;
+    font-size: 12px;
     color: #e0e0e0;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
 .product-name {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     letter-spacing: 1px;
     color: #ffffff;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .product-price {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     letter-spacing: 1px;
     color: #ffffff;
@@ -152,24 +178,24 @@
 
 .product-tag {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: 15px;
+    left: 15px;
     color: #e96767;
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 3px;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 500;
     z-index: 3;
 }
 
-/* SLIDER CONTROLS */
+/* SLIDER CONTROLS - (No major changes needed here, adjust if visible in product card) */
 .slider-dots {
     position: absolute;
-    top: 20px;
+    top: 15px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 8px;
+    gap: 6px;
     z-index: 4;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -180,8 +206,8 @@
 }
 
 .dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     background-color: #ffffff99;
     border: 1px solid #0000001a;
     border-radius: 50%;
@@ -203,7 +229,7 @@
     top: 50%;
     left: 0;
     width: 100%;
-    padding: 0 15px;
+    padding: 0 10px;
     display: flex;
     justify-content: space-between;
     transform: translateY(-50%);
@@ -223,9 +249,9 @@
     color: white;
     border: none;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -237,6 +263,7 @@
     background-color: #00000099;
 }
 
+/* OVERLAY AND SIDEBAR (No changes needed here for layout issues) */
 .overlay {
     position: fixed;
     top: 0;
@@ -461,7 +488,6 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background-color: #fff;
     border: 1px solid #ccc;
     box-shadow: 0 0 5px #0000001a;
     cursor: pointer;
@@ -472,15 +498,12 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background-color: #fff;
-    border: 1px solid #ccc;
     box-shadow: 0 0 5px #0000001a;
     cursor: pointer;
 }
 
 .sidebar-footer {
     padding: 1.5rem 2rem;
-    border-top: 1px solid #e0e0e0;
     background-color: #f8f8f8;
 }
 
@@ -505,7 +528,6 @@
     justify-content: center;
     align-items: center;
     padding: 3rem 2rem;
-    background-color: #f8f8f8;
 }
 
 .load-more-button {
@@ -525,26 +547,99 @@
     background-color: #333;
 }
 
-@media(max-width:1200px) {
+
+/* Responsive adjustments */
+
+@media (min-width: 1201px) {
     .product-grid {
-        flex-direction: column;
+        flex-direction: row;
     }
 
-    .product-grid-right .hero-image-container {
-        min-height: 500px;
-        max-height: 60vh;
+    .product-grid-left {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .product-grid-right {
+        flex: 1;
+        min-height: auto;
+    }
+
+
+    .niche-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .hero-image-container img {
+        height: auto;
+        max-height: 100vh;
+    }
+}
+
+
+/* For screens between 769px and 1200px (Desktop/Tablet landscape) */
+@media (min-width: 769px) and (max-width: 1200px) {
+    .bzero-header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0rem 1rem;
+        padding-top: 3.4rem;
+        padding-bottom: 0.5rem
+    }
+
+    .bzero-header-right {
+        margin-top: 3rem;
+        width: 100%;
+    }
+
+    .filter-toggle-button {
+        width: 100%;
+        text-align: center;
+    }
+
+    .product-grid {
+        flex-direction: column;
+        /* Stack product grid items (left and right) */
+    }
+
+    .product-grid-left {
+        grid-template-columns: repeat(2, 1fr);
+        width: 100%;
+    }
+
+    .product-grid-right {
+        width: 100%;
+        border-top: none;
     }
 
     .niche-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .product-info {
+        padding: 1rem 0.5rem 0.5rem 0.5rem;
+    }
+
+    .product-material {
+        font-size: 10px;
+    }
+
+    .product-name {
+        font-size: 12px;
+    }
+
+    .product-price {
+        font-size: 11px;
+    }
 }
 
-@media(max-width:768px) {
+/* For screens up to 768px (Mobile/Tablet portrait) */
+@media (max-width: 768px) {
     .bzero-header {
         flex-direction: column;
         align-items: flex-start;
-        padding: 1.5rem;
+        padding: 0rem 1rem;
+        padding-top: 4.3rem;
+        padding-bottom: 1rem;
     }
 
     .bzero-header-right {
@@ -557,13 +652,92 @@
         text-align: center;
     }
 
-    .product-grid-left,
-    .niche-grid {
-        grid-template-columns: 1fr;
+    .product-grid {
+        flex-direction: column;
+        /* Stack product grid items (left and right) */
     }
 
-    .filter-sidebar {
-        width: 90%;
-        max-width: 350px;
+    .product-grid-left {
+        grid-template-columns: repeat(2, 1fr);
+        width: 100%;
+    }
+
+
+    .product-grid-right {
+        width: 100%;
+        border-top: none;
+    }
+
+    .niche-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .product-card {
+        min-height: 500px;
+        max-height: 380px;
+    }
+
+    .product-info {
+        padding: 1rem 0.5rem 0.5rem 0.5rem;
+    }
+
+    .product-material {
+        font-size: 10px;
+    }
+
+    .product-name {
+        font-size: 12px;
+    }
+
+    .product-price {
+        font-size: 11px;
+    }
+    .bzero-title {
+        font-size: 18px;
+    }
+}
+
+/* For screens between 320px and 480px (Small Mobile) */
+@media (max-width: 480px) {
+    .bzero-header {
+        padding: 0rem 1rem;
+        padding-top: 4.6rem;
+        padding-bottom: 0.5rem;
+    }
+    .bzero-title {
+        font-size: 1px;
+    }
+
+    .product-grid-left,
+    .niche-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .product-card {
+        min-height: 290px;
+        max-height: 330px;
+    }
+
+    .product-info {
+        padding: 0.8rem 0.4rem 0.4rem 0.4rem;
+    }
+
+    .product-material {
+        font-size: 9px;
+    }
+
+    .product-name {
+        font-size: 11px;
+    }
+
+    .product-price {
+        font-size: 10px;
+    }
+
+    .product-tag {
+        top: 10px;
+        left: 10px;
+        padding: 3px 8px;
+        font-size: 0.6rem;
     }
 }
