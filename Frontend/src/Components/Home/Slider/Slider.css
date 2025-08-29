@@ -1,0 +1,261 @@
+/* === GLOBAL RESET === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.slider-container {
+    width: 100%;
+    margin: 0 auto;
+    background-image: url(/public/sfondo.avif);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    padding: 160px 0px;
+    padding-right: 30px;
+    display: flex;
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 100px;
+}
+
+.Section-Heading-title {
+    font-size: 35px;
+    text-align: center;
+}
+
+.Section-Heading-subtitle {
+    font-size: 18px;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.modern-slider {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.modern-slider.is-initialized {
+    visibility: visible;
+    opacity: 1;
+}
+
+.splide__track {
+    padding: 30px 0;
+    overflow: visible;
+}
+
+.splide__list {
+    align-items: center;
+}
+
+.modern-slide {
+    transform: scale(0.9);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+}
+
+.modern-slide.is-active {
+    transform: scale(1);
+    z-index: 2;
+}
+
+.slide-content {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    background-color: #eeedee;
+    justify-content: center;
+}
+
+.image-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    padding: 5px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-wrapper img {
+    width: 100%;
+    display: block;
+    height: 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.image-wrapper:hover img {
+    transform: scale(1.05);
+}
+
+.top-text {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    color: #c05028;
+    font-size: 13px;
+    letter-spacing: 1px;
+    font-weight: 400;
+}
+
+.bottom-text {
+    position: absolute;
+    bottom: 25px;
+    left: 25px;
+    color: #181818e7;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.splide__arrow {
+    background: #fffffff2;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    box-shadow: 0 8px 25px #00000026;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid #ffffff33;
+}
+
+
+.splide__arrow svg {
+    fill: #1f1f1fe8;
+    width: 1.6em;
+    height: 1.6em;
+    transition: fill 0.3s ease;
+    font-weight: 200;
+}
+
+.splide__arrow--prev {
+    left: auto;
+    right: 90px;
+    top: -50px;
+}
+
+.splide__arrow--next {
+    right: 0px;
+    top: -50px;
+    left: auto;
+}
+
+.custom-separator {
+    text-align: center;
+    margin-top: 1px;
+    color: #000000da;
+    font-size: 14px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.custom-separator .star {
+    cursor: pointer;
+    font-size: 20px;
+    vertical-align: middle;
+    position: relative;
+    top: -2px;
+}
+
+
+@media (max-width: 992px) {
+    .slider-container {
+        padding: 40px 15px;
+    }
+
+    .image-wrapper img {
+        height: 220px;
+    }
+
+    .splide__arrow {
+        width: 45px;
+        height: 45px;
+    }
+
+    .splide__arrow--prev {
+        left: -20px;
+    }
+
+    .splide__arrow--next {
+        right: -20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .slider-container {
+        padding: 30px 10px;
+    }
+
+    .image-wrapper {
+        padding: 6px;
+    }
+
+    .image-wrapper img {
+        height: 280px;
+    }
+
+    .top-text {
+        top: 15px;
+        left: 15px;
+        font-size: 0.9rem;
+    }
+
+    .bottom-text {
+        bottom: 15px;
+        left: 15px;
+        font-size: 1.1rem;
+    }
+
+    .splide__arrow {
+        width: 40px;
+        height: 40px;
+    }
+
+    .splide__arrow--prev {
+        left: 10px;
+    }
+
+    .splide__arrow--next {
+        right: 10px;
+    }
+
+    .splide__arrow svg {
+        width: 1.2em;
+        height: 1.2em;
+    }
+
+    .custom-separator {
+        font-size: 18px;
+        letter-spacing: 12px;
+    }
+
+    .custom-separator .star {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 400px) {
+    .image-wrapper img {
+        height: 240px;
+    }
+
+    .splide__arrow {
+        width: 35px;
+        height: 35px;
+    }
+
+    .splide__arrow svg {
+        width: 1em;
+        height: 1em;
+    }
+}

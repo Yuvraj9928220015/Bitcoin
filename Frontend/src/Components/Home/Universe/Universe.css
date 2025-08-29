@@ -1,0 +1,216 @@
+
+.universe-container {
+    width: 100%;
+    max-width: 1600px;
+}
+
+.universe-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.universe-title {
+    color: #000000;
+    font-size: 2.1rem;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-weight: 300;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.universe-subtitle {
+    color: #292929;
+    font-size: 1rem;
+    letter-spacing: 0.9px;
+    font-weight: 300;
+    line-height: 1.5;
+    margin: -1rem 0 0 0;
+}
+
+.form-row {
+    display: flex;
+    gap: 3rem;
+    width: 100%;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-group.full-width {
+    width: 100%;
+}
+
+.form-group label {
+    font-size: 16px;
+    color: #6c757d;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group select {
+    width: 100%;
+    border: none;
+    border: 1px solid #aeaeae;
+    border-radius: 1px;
+    background-color: transparent;
+    border-radius: 4px;
+    padding: 0.75rem 0.25rem;
+    font-size: 1rem;
+    color: #333;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-bottom-color: #000000;
+}
+
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #333;
+}
+
+input[type="radio"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: #fff;
+    margin: 0;
+    font: inherit;
+    color: currentColor;
+    width: 1.15em;
+    height: 1.15em;
+    border: 0.15em solid #aeaeae;
+    border-radius: 50%;
+    transform: translateY(-0.075em);
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+}
+
+input[type="radio"]::before {
+    content: "";
+    width: 0.65em;
+    height: 0.65em;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    background-color: #000;
+}
+
+input[type="radio"]:checked::before {
+    transform: scale(1);
+}
+
+.privacy-text {
+    font-size: 0.8rem;
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.privacy-text a {
+    color: #000;
+    text-decoration: underline;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.checkbox-group>label {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    color: #333;
+    cursor: pointer;
+}
+
+input[type="checkbox"] {
+    width: 1.15em;
+    height: 1.15em;
+    cursor: pointer;
+}
+
+.required-fields {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+.subscribe-btn {
+    background-color: #000000;
+    color: #ffffff;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 0.9rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    align-self: flex-start;
+    margin-top: 1rem;
+    transition: opacity 0.2s ease;
+}
+
+.subscribe-btn:hover {
+    opacity: 0.85;
+}
+
+.recaptcha-notice {
+    font-size: 0.8rem;
+    color: #555;
+    text-align: left;
+}
+
+.recaptcha-notice a {
+    color: #000;
+    text-decoration: none;
+}
+
+@media (max-width: 768px) {
+    .universe-title {
+        font-size: 1.8rem;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .radio-group {
+        gap: 1rem;
+    }
+
+    .subscribe-btn {
+        width: 100%;
+    }
+}

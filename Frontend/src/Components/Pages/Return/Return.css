@@ -1,0 +1,18 @@
+.Return {
+    padding-top: 100px;
+    padding-bottom: 40px;
+}
+
+.Return-heading {
+    text-align: center;
+    padding: 20px 0px;
+    font-size: 25px;
+    letter-spacing: 1px;
+    color: #583E23;
+}
+
+.Return-des {
+    font-size: 16px;
+    letter-spacing: 1px;
+    line-height: 32px;
+}

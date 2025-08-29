@@ -1,0 +1,278 @@
+/* Discover Section Styles */
+.discover-section {
+    padding: 80px 20px;
+    background-color: #f3f2f3;
+}
+
+.container-fluid {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.Section-Heading {
+    padding-bottom: 70px;
+}
+
+/* Grid Layout */
+.jewelry-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 30px;
+    align-items: start;
+}
+
+/* Card Styles */
+.jewelry-card {
+    border-radius: 12px;
+    transition: all 0.4s ease;
+    height: auto;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+}
+
+.jewelry-card:hover {
+    transform: translateY(-10px);
+}
+
+.jewelry-image {
+    width: 100%;
+    min-height: 440px;
+    max-height: 440px;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.jewelry-card:hover .jewelry-image {
+    transform: scale(1.05);
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+            #ffffff1a 0%,
+            #0000001a 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.jewelry-card:hover .image-overlay {
+    opacity: 1;
+    border-radius: 12px 12px 0px 0px;
+
+}
+
+/* Content Styles */
+.jewelry-content {
+    padding-top: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.discover-Heading-title {
+    text-transform: uppercase;
+    letter-spacing: 8px;
+    font-weight: 500;
+    font-size: 40px;
+    line-height: 0.6;
+    color: black;
+    font-family: Georgia;
+}
+
+.jewelry-title a {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #2c2c2c;
+    margin: 0 0 15px 0;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+}
+.jewelry-title a:hover {
+    text-decoration: underline;
+}
+
+
+.jewelry-description {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    letter-spacing: 1px;
+    color: #161616f3;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .jewelry-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 25px;
+    }
+
+    .discover-title {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .jewelry-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .discover-title {
+        font-size: 2.5rem;
+        letter-spacing: 2px;
+    }
+
+    .discover-section {
+        padding: 60px 0;
+    }
+
+    .container-fluid {
+        padding: 0 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .jewelry-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .discover-title {
+        font-size: 2rem;
+        letter-spacing: 1.5px;
+    }
+
+    .title-highlight {
+        padding: 6px 12px;
+        margin-right: 8px;
+    }
+    .jewelry-title {
+        font-size: 1.2rem;
+    }
+
+    .jewelry-description {
+        font-size: 0.9rem;
+    }
+
+    .jewelry-image-container {
+        min-height: 250px;
+    }
+
+    .jewelry-image {
+        min-height: 250px;
+    }
+}
+
+@media (max-width: 576px) {
+    .jewelry-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .discover-title {
+        font-size: 1.8rem;
+        letter-spacing: 1px;
+    }
+
+    .discover-section {
+        padding: 40px 0;
+    }
+
+    .discover-header {
+        margin-bottom: 40px;
+    }
+
+    .container-fluid {
+        padding: 0 10px;
+    }
+
+    .jewelry-image-container {
+        min-height: 200px;
+    }
+
+    .jewelry-image {
+        min-height: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .discover-title {
+        font-size: 1.5rem;
+    }
+
+    .title-highlight {
+        display: block;
+        margin-bottom: 8px;
+        margin-right: 0;
+    }
+
+    .jewelry-title {
+        font-size: 1.1rem;
+    }
+
+    .jewelry-description {
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    .jewelry-image-container {
+        min-height: 180px;
+    }
+
+    .jewelry-image {
+        min-height: 180px;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.jewelry-card {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.jewelry-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.jewelry-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.jewelry-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.jewelry-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.jewelry-card:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.jewelry-card {
+    will-change: transform;
+}

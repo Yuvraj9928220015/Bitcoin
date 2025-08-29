@@ -1,0 +1,50 @@
+.About-container {
+    width: 100%;
+    background-image: url(/public/About-Banner.webp);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 200;
+    font-size: 30px;
+    letter-spacing: 1px;
+}
+
+.About-container p {
+    color: #664D28;
+}
+
+.About-container-Box-Image {
+    padding: 40px 0px;
+    /* background-image: url(/public/About-Welcome.webp); */
+    background: linear-gradient(to bottom, #f4d4a7, #e8ddd4);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.About-container-Box-title {
+    font-size: 26px;
+    font-weight: 200;
+    color: #664D28;
+    line-height: 35px;
+    text-align: justify;
+    cursor: pointer;
+}
+
+.About-container-Box-des {
+    padding: 30px 0px;
+}
+
+.About-container-Box-des p {
+    cursor: pointer;
+    color: #68502d;
+    font-weight: 300;
+    text-align: justify;
+    font-size: 16px;
+    letter-spacing: 1px;
+    line-height: 28px;
+}

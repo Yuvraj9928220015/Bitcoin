@@ -1,0 +1,8 @@
+.dashboard-container {
+    width: 100%;
+    min-height: calc(100vh - 160px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f2f5;
+}

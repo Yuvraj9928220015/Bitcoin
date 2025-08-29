@@ -1,0 +1,243 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.header-section-enhanced {
+    height: 100vh;
+    background: #fdfdfd;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.header-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    z-index: 10;
+    /* background-attachment: fixed; */
+}
+
+.layout-container-enhanced {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.layout-wrapper-enhanced {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.98);
+}
+
+.layout-wrapper-enhanced.active {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+}
+
+.two-column-grid,
+.single-column {
+    display: grid;
+    height: 100%;
+    gap: 0;
+}
+
+.two-column-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+.single-column {
+    grid-template-columns: 1fr;
+}
+
+
+.video-box {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    cursor: pointer;
+    background: #000;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.8s forwards ease-out;
+}
+
+
+.Header-play-pause-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 40px;
+    width: 48px;
+    height: 48px;
+    background-color: #f0f0f0e6;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #333;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    z-index: 10;
+}
+
+.Header-play-pause-btn:hover {
+    background-color: #ffffff;
+    transform: scale(1.05);
+}
+
+.Header-play-pause-btn span {
+    display: block;
+    line-height: 1;
+}
+
+
+.layout-wrapper-enhanced.active .video-box {
+    animation-delay: var(--animation-delay, 0s);
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.video-element {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scale(1.05);
+    transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.video-box:hover .video-element {
+    transform: scale(1);
+}
+
+.gradient-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, #000000b3 0%, #00000066 30%, transparent 60%);
+    transition: background 0.5s ease;
+}
+
+.video-box:hover .gradient-overlay {
+    background: linear-gradient(to top, #000000d9 0%, #00000080 40%, transparent 70%);
+}
+
+
+.content-overlay {
+    position: absolute;
+    inset: 0;
+    padding: 2.5rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+    opacity: 1;
+}
+
+.overlay-content {
+    max-width: 90%;
+    transform: translateY(10px);
+    opacity: 0.9;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.video-box:hover .overlay-content {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.video-title {
+    margin-bottom: 0.5rem;
+    font-size: 30px;
+    font-weight: 400;
+    color: white;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+}
+
+.Header-video-description {
+    font-size: 16px;
+    font-weight: 300;
+    color: #ffffff;
+    line-height: 1.6;
+    letter-spacing: 1px;
+    max-width: 450px;
+}
+
+
+/* --- Discover Button --- */
+.discover-button {
+    position: relative;
+    overflow: hidden;
+    background-color: transparent;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid #ffffffcc;
+    cursor: pointer;
+    transition: all 0.4s ease;
+}
+
+.button-text {
+    position: relative;
+    z-index: 10;
+}
+
+.button-background {
+    position: absolute;
+    inset: 0;
+    background-color: white;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.discover-button:hover {
+    color: black;
+    border-color: white;
+}
+
+.discover-button:hover .button-background {
+    transform: scaleX(1);
+}
+
+/* === Responsive Design === */
+@media (max-width: 768px) {
+    .header-section-enhanced {
+        min-height: 100vh;
+    }
+
+    .two-column-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+        height: 100vh;
+    }
+
+    .video-box {
+        min-height: 50vh;
+    }
+
+    .content-overlay {
+        padding: 1.5rem;
+    }
+
+    .navigation-controls {
+        bottom: 1.5rem;
+    }
+}

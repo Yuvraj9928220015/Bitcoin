@@ -1,0 +1,335 @@
+/* Main Container */
+.jewelry-showcase {
+    min-height: 100vh;
+    background-color: #f9fafb;
+}
+
+.showcase-container {
+    display: flex;
+    height: 100vh;
+}
+
+.showcase-section {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.showcase-section:hover .showcase-image {
+    transform: scale(1.05);
+}
+
+.showcase-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    transition: transform 0.7s ease;
+}
+
+.overlay-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to top,
+            #000000cc 0%,
+            #00000066 50%,
+            transparent 100%);
+}
+
+.main-content-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 3rem;
+    z-index: 10;
+}
+a {
+    text-decoration: none;
+}
+
+.main-content-wrapper {
+    color: white;
+    max-width: 28rem;
+}
+
+.brand-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    backdrop-filter: blur(4px);
+}
+
+.serpenti-badge {
+    background-color: #2563ebe6;
+    color: white;
+}
+
+.showcase-title {
+    font-size: 1.8rem;
+    font-weight: 300;
+    line-height: 1.2;
+    letter-spacing: 1px;
+}
+
+.showcase-description {
+    color: #ffffff;
+    font-size: 1.1rem;
+    text-transform: capitalize;
+    letter-spacing: 1px;
+    line-height: 1.8;
+}
+
+.shop-button {
+    background-color: transparent;
+    border: 2px solid white;
+    color: white;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+.shop-button:hover {
+    background-color: white;
+    color: black;
+    transform: translateY(-1px);
+}
+
+/* Video Section */
+.video-section {
+    display: flex;
+    min-height: 100vh;
+    max-height: 100vh;
+    background-color: #f3f2f3;
+    color: #0f0f0f;
+}
+
+.video-wrapper,
+.video-content {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.video-wrapper video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-content {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 4rem;
+}
+
+.Main-video-title {
+    font: 200 3rem;
+    margin-bottom: 1.5rem;
+}
+
+.video-description {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    color: #0f0f0f;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+.Main-video-button {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    text-align: start;
+    font-size: 15px;
+    letter-spacing: 1px;
+    font-weight: 500;
+    color: rgb(0, 0, 0);
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid #000000;
+    padding-bottom: 8px;
+    cursor: pointer;
+    margin-top: 15px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.Main-video-button::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            #000000 25%,
+            rgb(0, 0, 0) 50%,
+            #000000 75%,
+            transparent 100%);
+    opacity: 0;
+}
+
+.Main-video-button:hover::after {
+    animation: wave-sweep 1.5s ease-in-out infinite;
+}
+
+@keyframes wave-sweep {
+    0% {
+        left: -100%;
+        opacity: 0;
+    }
+
+    50% {
+        left: 0%;
+        opacity: 1;
+    }
+
+    100% {
+        left: 100%;
+        opacity: 0;
+    }
+}
+
+.Main-video-button:hover {
+    border-bottom-color: transparent;
+}
+
+
+/* Tablet Styles */
+@media (max-width: 1023px) {
+    .showcase-container {
+        flex-direction: column;
+    }
+
+    .main-content-overlay {
+        padding: 2rem;
+    }
+
+    .showcase-title {
+        font-size: 2rem;
+    }
+
+    .showcase-description {
+        font-size: 1.125rem;
+    }
+
+    .video-section {
+        flex-direction: column;
+    }
+
+    .video-wrapper,
+    .video-content {
+        width: 100%;
+    }
+
+    .video-wrapper {
+        min-height: 50vh;
+    }
+
+    .video-content {
+        padding: 3rem;
+        min-height: 50vh;
+    }
+
+    .Main-video-title {
+        font-size: 2.5rem;
+    }
+}
+
+/* Mobile Styles */
+@media (max-width: 767px) {
+    .main-content-overlay {
+        padding: 1.5rem;
+    }
+
+    .main-content-wrapper {
+        max-width: 100%;
+    }
+
+    .showcase-title {
+        font-size: 1.75rem;
+    }
+
+    .divas-title {
+        font-size: 1.75rem;
+    }
+
+    .showcase-description {
+        font-size: 1rem;
+    }
+
+    .shop-button {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.8rem;
+    }
+
+    .video-content {
+        padding: 2rem;
+    }
+
+    .Main-video-title {
+        font-size: 2rem;
+    }
+
+    .video-description {
+        font-size: 1rem;
+    }
+
+    .video-button {
+        padding: 0.75rem 2rem;
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 480px) {
+    .main-content-overlay {
+        padding: 1rem;
+    }
+
+    .showcase-title {
+        font-size: 1.5rem;
+    }
+
+    .divas-title {
+        font-size: 1.5rem;
+    }
+
+    .showcase-description {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .brand-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+@media (hover: hover) {
+    .showcase-section:hover .main-content-wrapper {
+        transform: translateY(-5px);
+        transition: transform 0.3s ease;
+    }
+}
