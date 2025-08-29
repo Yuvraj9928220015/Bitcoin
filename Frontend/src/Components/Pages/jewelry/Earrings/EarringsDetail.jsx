@@ -333,8 +333,8 @@ const EarringsDetail = () => {
 
                             {mediaItems.length > 1 && (
                                 <>
-                                    <button onClick={handlePrevMedia} className="pdp-nav-arrow pdp-prev"><BsArrowLeftShort /></button>
-                                    <button onClick={handleNextMedia} className="pdp-nav-arrow pdp-next"><BsArrowRightShort /></button>
+                                    <button onClick={handlePrevMedia} className="pdp-nav-arrow-Earrings pdp-prev"><BsArrowLeftShort /></button>
+                                    <button onClick={handleNextMedia} className="pdp-nav-arrow-Earrings pdp-next"><BsArrowRightShort /></button>
                                 </>
                             )}
                         </div>
@@ -342,7 +342,6 @@ const EarringsDetail = () => {
                         <div className="pdp-details-container">
                             <div className="pdp-header">
                                 <h1 className="pdp-title">{product.name}</h1>
-                                <button className="pdp-wishlist-btn" title="Add to Wishlist"><FaRegHeart /></button>
                             </div>
 
                             <div className="pdp-price-review-row">

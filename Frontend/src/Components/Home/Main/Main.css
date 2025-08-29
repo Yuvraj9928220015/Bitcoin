@@ -54,6 +54,7 @@
     padding: 3rem;
     z-index: 10;
 }
+
 a {
     text-decoration: none;
 }
@@ -267,7 +268,7 @@ a {
     }
 
     .showcase-title {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
     }
 
     .divas-title {
@@ -309,7 +310,7 @@ a {
     }
 
     .showcase-title {
-        font-size: 1.5rem;
+        font-size: 1rem;
     }
 
     .divas-title {
@@ -324,6 +325,10 @@ a {
     .brand-badge {
         font-size: 0.75rem;
         padding: 0.4rem 0.8rem;
+    }
+
+    .hero-cta-btn-v4 {
+        font-size: 0.8rem;
     }
 }
 

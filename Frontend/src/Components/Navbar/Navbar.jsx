@@ -6,7 +6,7 @@ import { CiMenuFries, CiSearch, CiHeart } from "react-icons/ci";
 import { TbUser } from "react-icons/tb";
 import { SlHandbag } from "react-icons/sl";
 import { IoClose } from "react-icons/io5";
-import { FaEye, FaEyeSlash, FaHeart, FaGem, FaBoxOpen, FaRegClock } from "react-icons/fa"; // Import FaEyeSlash
+import { FaEye, FaEyeSlash, FaHeart, FaGem, FaBoxOpen, FaRegClock } from "react-icons/fa";
 import { GoDash, GoPlus } from "react-icons/go";
 import './Navbar.css';
 import AddedToCartNotification from '../context/AddedToCartNotification';
@@ -165,12 +165,43 @@ const Navbar = () => {
     const [isInsideBvlgariOpen, setIsInsideBvlgariOpen] = useState(false);
     const [isPendantsOpen, setIsPendantsOpen] = useState(false);
 
+    const PendantsData = {
+        collections: [
+            {
+                name: 'Digital Gold Pendant',
+                image: '/Bzero5-1.webp',
+                id: "688b0c4b4376123d4742d3d2"
+            },
+            {
+                name: 'HODL & Shine Pendant',
+                image: '/Bzero10-2.webp',
+                id: "688b0e204376123d4742d3ff"
+            },
+            {
+                name: 'Bitcoin Blade Pendant',
+                image: '/DSC07226.JPG',
+                id: "688b0c4b4376123d4742d3d2"
+            },
+            {
+                name: 'Your Keys Pendant',
+                image: '/Man-Banner-1.JPG',
+                id: "688b0c4b4376123d4742d3d2"
+            },
+        ]
+    };
+
     const womansPendantsData = {
         collections: [
-            { name: 'Digital Gold Pendant', image: '/Bzero5-1.webp' },
-            { name: 'HODL & Shine Pendant', image: '/Bzero10-2.webp' },
-            { name: 'Bitcoin Blade Pendant', image: '/DSC07226.JPG' },
-            { name: 'Your Keys Pendant', image: '/Man-Banner-1.JPG' },
+            {
+                name: 'Digital Gold Pendant',
+                image: '/Bzero5-1.webp',
+                id: "688b0c4b4376123d4742d3d2"
+            },
+            {
+                name: 'HODL & Shine Pendant',
+                image: '/Bzero10-2.webp',
+                id: "688b0e204376123d4742d3ff"
+            }
         ]
     };
 
@@ -203,6 +234,10 @@ const Navbar = () => {
         ]
     };
 
+    const handleClick = (id) => {
+        navigate(`/product/${id}`);
+    };
+
     useEffect(() => {
         const token = Cookies.get('token');
         if (token) {
@@ -225,7 +260,6 @@ const Navbar = () => {
                 setUser(data.user);
             } else {
                 console.error("Failed to fetch user data:", data.message);
-                // If token is invalid, clear it
                 Cookies.remove('token');
                 setIsAuthenticated(false);
                 setUser(null);
@@ -250,17 +284,17 @@ const Navbar = () => {
 
     const toggleLogin = () => {
         setIsLoginOpen(!isLoginOpen);
-        setIsSignupOpen(false); // Close signup if opening login
-        setLoginError(''); // Clear any previous errors
-        setShowLoginPassword(false); // Reset password visibility
+        setIsSignupOpen(false);
+        setLoginError('');
+        setShowLoginPassword(false);
     };
 
     const toggleSignup = () => {
         setIsSignupOpen(!isSignupOpen);
-        setIsLoginOpen(false); // Close login if opening signup
-        setSignupError(''); // Clear any previous errors
-        setShowSignupPassword(false); // Reset password visibility
-        setShowSignupConfirmPassword(false); // Reset confirm password visibility
+        setIsLoginOpen(false);
+        setSignupError('');
+        setShowSignupPassword(false);
+        setShowSignupConfirmPassword(false);
     };
 
     const handleMenuLinkClick = (menuName) => {
@@ -275,7 +309,7 @@ const Navbar = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setLoginError(''); // Clear previous errors
+        setLoginError('');
 
         try {
             const response = await fetch('http://localhost:9000/api/auth/login', {
@@ -289,14 +323,14 @@ const Navbar = () => {
             const data = await response.json();
 
             if (response.ok && data.success) {
-                Cookies.set('token', data.token, { expires: 7 }); // Store token for 7 days
+                Cookies.set('token', data.token, { expires: 7 });
                 setIsAuthenticated(true);
                 setUser(data.user);
                 setLoginEmail('');
                 setLoginPassword('');
                 setIsLoginOpen(false);
-                alert(data.message); // "Logged in successfully!"
-                navigate('/'); // Navigate to home page or dashboard
+                alert(data.message);
+                navigate('/');
             } else {
                 setLoginError(data.message || 'Login failed. Please check your credentials.');
             }
@@ -308,7 +342,7 @@ const Navbar = () => {
 
     const handleSignup = async (e) => {
         e.preventDefault();
-        setSignupError(''); // Clear previous errors
+        setSignupError('');
 
         if (signupPassword !== signupConfirmPassword) {
             setSignupError('Passwords do not match.');
@@ -346,10 +380,9 @@ const Navbar = () => {
             const data = await response.json();
 
             if (response.ok && data.success) {
-                Cookies.set('token', data.token, { expires: 7 }); // Store token
+                Cookies.set('token', data.token, { expires: 7 });
                 setIsAuthenticated(true);
                 setUser(data.user);
-                // Clear form fields
                 setSignupTitle('');
                 setSignupFirstName('');
                 setSignupLastName('');
@@ -361,8 +394,8 @@ const Navbar = () => {
                 setTermsAgreed(false);
                 setNewsletterAgreed(false);
                 setIsSignupOpen(false);
-                alert(data.message); // "User registered successfully!"
-                navigate('/'); // Navigate to home page or dashboard
+                alert(data.message);
+                navigate('/');
             } else {
                 setSignupError(data.message || 'Signup failed. Please try again.');
             }
@@ -373,11 +406,11 @@ const Navbar = () => {
     };
 
     const handleLogout = () => {
-        Cookies.remove('token'); // Remove token
+        Cookies.remove('token');
         setIsAuthenticated(false);
         setUser(null);
         alert('You have been logged out.');
-        navigate('/'); // Navigate to home page
+        navigate('/');
     };
 
 
@@ -398,6 +431,11 @@ const Navbar = () => {
                 dataToShow = braceletsData.collections;
                 break;
             case 'Womans Pendants':
+                dataToShow = womansPendantsData.collections;
+                break;
+            case 'Pendants':
+                dataToShow = PendantsData.collections;
+                break;
             default:
                 dataToShow = womansPendantsData.collections;
                 break;
@@ -406,7 +444,14 @@ const Navbar = () => {
         return (
             <div className="featured-grid">
                 {dataToShow.map((item, index) => (
-                    <div key={index} className="featured-item" onClick={closeMenuAndNavigate}>
+                    <div
+                        key={index}
+                        className="featured-item"
+                        onClick={() => {
+                            handleClick(item.id);
+                            closeMenuAndNavigate();
+                        }}
+                    >
                         <img src={item.image} alt={item.name} />
                         <h4>{item.name}</h4>
                     </div>
@@ -511,7 +556,10 @@ const Navbar = () => {
                                 {isCollectionsOpen && (
                                     <ul className="menu-main-list">
                                         <li className={activeSubMenu.includes('Pendants') ? 'active' : ''}>
-                                            <div className="menu-item-with-dropdown" onClick={() => setIsPendantsOpen(!isPendantsOpen)}>
+                                            <div className="menu-item-with-dropdown" onClick={() => {
+                                                setIsPendantsOpen(!isPendantsOpen);
+                                                handleMenuLinkClick('Pendants');
+                                            }}>
                                                 <span>Pendants</span>
                                                 <span>{isPendantsOpen ? <GoDash /> : <GoPlus />}</span>
                                             </div>
@@ -733,7 +781,7 @@ const Navbar = () => {
                                             required
                                         />
                                         <button type="button" className="password-toggle" onClick={() => setShowSignupPassword(!showSignupPassword)}>
-                                            {showSignupPassword ? <FaEyeSlash /> : <FaEye />} 
+                                            {showSignupPassword ? <FaEyeSlash /> : <FaEye />}
                                         </button>
                                     </div>
                                 </div>

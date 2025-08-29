@@ -660,7 +660,7 @@
 }
 
 .item-name {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 500;
     margin: 0 0 0.5rem;
     color: #222;
@@ -870,24 +870,19 @@
     }
 
     .cart-item-full-image {
-        width: 120px;
-        height: 120px;
+        width: 250px;
+        height: 200px;
         align-self: center;
     }
 
     .cart-item-full-details,
     .cart-item-full-code {
-        text-align: center;
         width: 100%;
     }
 
     .logo-text {
         height: 40px;
         width: 40px;
-    }
-
-    .quantity-control-page {
-        justify-content: center;
     }
 
     .complimentary-box {
@@ -927,12 +922,22 @@
     .item-name,
     .complimentary-box-text h2,
     .summary-title {
-        font-size: 1.3rem;
+        font-size: 1rem;
+    }
+
+    .cart-item-full-details {
+        text-align: start;
     }
 
     .logo-text {
         height: 25px;
         width: 25px;
+    }
+
+    .cart-item-full-image {
+        width: 250px;
+        height: 250px;
+        align-self: center;
     }
 }
 
@@ -973,6 +978,7 @@
 }
 
 @media (max-width: 767px) {
+
     .navbar-icons .icon-btn:has(> svg[data-icon="search"]),
     .navbar-icons .icon-btn:has(> svg[data-icon="heart"]) {
         display: none;
@@ -989,6 +995,7 @@
         width: 100%;
         max-width: 100%;
     }
+
     .icon-btn {
         font-size: 18px;
     }

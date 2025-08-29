@@ -63,7 +63,6 @@
 }
 
 .pdp-main-media-container {
-    position: sticky;
     top: 2rem;
     overflow: hidden;
     height: 700px;
@@ -90,15 +89,15 @@
     font-size: 1.2rem;
 }
 
-.pdp-nav-arrow {
+.pdp-nav-arrow-rings {
     position: absolute;
     top: 0;
     transform: translateY(-50%);
     background-color: #ffffffe6;
     border: 1px solid var(--border-color);
     border-radius: 50%;
-    width: 70px;
-    height: 70px;
+    width: 55px;
+    height: 55px;
     font-size: 1.5rem;
     color: var(--text-dark);
     cursor: pointer;
@@ -109,18 +108,18 @@
     z-index: 10;
 }
 
-.pdp-nav-arrow:hover {
+.pdp-nav-arrow-rings:hover {
     background-color: var(--bg-white);
     transform: translateY(-50%) scale(1.1);
 }
 
-.pdp-nav-arrow.pdp-prev {
+.pdp-nav-arrow-rings.pdp-prev {
     left: 0;
     top: 50%;
 }
 
-.pdp-nav-arrow.pdp-next {
-    right: 0;
+.pdp-nav-arrow-rings.pdp-next {
+    right: 50%;
     top: 50%;
 }
 
@@ -412,12 +411,18 @@
         gap: 2rem;
     }
 
-    /* MODIFICATION: Styles for thumbnail gallery removed */
-
     .pdp-main-media-container {
-        position: static;
-        height: 50vh;
-        max-height: 450px;
+        height: 70vh;
+    }
+
+    .pdp-nav-arrow-rings.pdp-prev {
+        left: 23%;
+        top: 75%;
+    }
+
+    .pdp-nav-arrow-rings.pdp-next {
+        right: 23%;
+        top: 75%;
     }
 }
 
@@ -444,14 +449,25 @@
     }
 
     .pdp-main-media-container {
-        height: 45vh;
-        max-height: 400px;
+        height: 80vh;
+        max-height: 600px;
+        width: 100%;
     }
 
     .pdp-meta-actions {
         flex-wrap: wrap;
         justify-content: flex-start;
         gap: 1rem;
+    }
+
+    .pdp-nav-arrow-rings.pdp-prev {
+        left: 20%;
+        top: 76%;
+    }
+
+    .pdp-nav-arrow-rings.pdp-next {
+        right: 20%;
+        top: 76%;
     }
 
 }
@@ -475,5 +491,15 @@
         align-items: flex-start;
         gap: 0.5rem;
         padding-bottom: 1rem;
+    }
+
+    .pdp-nav-arrow-rings.pdp-prev {
+        left: 0;
+        top: 76%;
+    }
+
+    .pdp-nav-arrow-rings.pdp-next {
+        right: 0;
+        top: 76%;
     }
 }
