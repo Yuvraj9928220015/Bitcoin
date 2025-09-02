@@ -1,19 +1,16 @@
-// controllers/checkoutController.js
-
 const Order = require('../models/Order');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); // Initialize Stripe
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-// Function to handle the checkout process and save order to DB
 exports.placeOrder = async (req, res) => {
     try {
         const {
-            amount, // Amount in cents from client
-            id: paymentMethodId, // Stripe PaymentMethod ID
-            browserId, // Client-side generated ID for idempotency/tracking
-            items, // Array of product items
-            customerInfo, // Billing/Customer information
-            note, // Optional note
-            appliedCoupon // Optional: { code, discount }
+            amount,
+            id: paymentMethodId,
+            browserId,
+            items,
+            customerInfo,
+            note,
+            appliedCoupon
         } = req.body;
 
         if (!amount || !paymentMethodId || !items || !customerInfo) {
@@ -24,7 +21,6 @@ exports.placeOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Cart is empty. Cannot place an order.' });
         }
 
-        // Calculate actual subtotal and final total on the server to prevent client manipulation
         const serverCalculatedSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         let serverCalculatedFinalTotal = serverCalculatedSubtotal;
         let discountAmount = 0;
@@ -34,30 +30,25 @@ exports.placeOrder = async (req, res) => {
             serverCalculatedFinalTotal -= discountAmount;
         }
 
-        // Ensure the amount from the client matches server calculation (with a small tolerance)
-        // This is crucial for security.
-        const tolerance = 1; // Allow for minor floating point discrepancies, e.g., 1 cent
+        const tolerance = 1;
         if (Math.abs(amount - Math.round(serverCalculatedFinalTotal * 100)) > tolerance) {
             console.warn(`Client amount mismatch: Client sent ${amount} cents, Server calculated ${Math.round(serverCalculatedFinalTotal * 100)} cents.`);
-            // You might want to return an error here in a production environment
-            // return res.status(400).json({ success: false, message: 'Payment amount mismatch. Please try again.' });
         }
 
 
-        // --- Create a PaymentIntent with Stripe ---
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount, // Use the amount sent from client (already validated against server calc)
+            amount: amount,
             currency: 'usd',
             payment_method: paymentMethodId,
-            confirmation_method: 'manual', // Requires explicit confirmation
-            confirm: true, // Confirm the PaymentIntent immediately
+            confirmation_method: 'manual',
+            confirm: true,
             description: `Order by ${customerInfo.email}`,
             metadata: {
                 browserId: browserId,
                 customerEmail: customerInfo.email,
                 orderItems: JSON.stringify(items.map(item => ({ id: item.productId, name: item.name, qty: item.quantity })))
             },
-            shipping: { // Stripe can also use shipping details
+            shipping: {
                 name: `${customerInfo.firstName} ${customerInfo.lastName}`,
                 address: {
                     line1: customerInfo.streetAddress1,
@@ -65,21 +56,17 @@ exports.placeOrder = async (req, res) => {
                     city: customerInfo.city,
                     state: customerInfo.state,
                     postal_code: customerInfo.zip,
-                    country: 'US', // Assuming US for now based on your form
+                    country: 'US',
                 },
                 phone: customerInfo.phone
             },
-            // Optionally, save customer details to Stripe Customer object if you plan recurring payments
-            // customer: 'cus_xyz' 
         });
 
-        // Handle PaymentIntent status
         if (paymentIntent.status === 'succeeded') {
-            // Payment was successful, save order details to database
             const newOrder = new Order({
                 customerInfo: customerInfo,
                 items: items.map(item => ({
-                    productId: item.id || item.cartId, // Use item.id or item.cartId as product identifier
+                    productId: item.id || item.cartId,
                     name: item.name,
                     image: item.image,
                     price: item.price,
@@ -92,8 +79,8 @@ exports.placeOrder = async (req, res) => {
                 note: note,
                 paymentMethodId: paymentMethodId,
                 paymentStatus: 'succeeded',
-                stripeChargeId: paymentIntent.id, // Store PaymentIntent ID
-                shippingDetails: { // For this example, shipping is same as billing
+                stripeChargeId: paymentIntent.id,
+                shippingDetails: {
                     country: customerInfo.country,
                     state: customerInfo.state,
                     city: customerInfo.city,
@@ -114,7 +101,6 @@ exports.placeOrder = async (req, res) => {
             });
 
         } else if (paymentIntent.status === 'requires_action' || paymentIntent.status === 'requires_source_action') {
-            // Handle 3D Secure or other required actions
             console.log('Payment requires action:', paymentIntent.next_action);
             return res.status(400).json({
                 success: false,
@@ -139,7 +125,6 @@ exports.placeOrder = async (req, res) => {
     }
 };
 
-// Optional: Get all orders (for admin panel, etc.)
 exports.getAllOrders = async (req, res) => {
     try {
         const orders = await Order.find().sort({ createdAt: -1 });
@@ -150,7 +135,6 @@ exports.getAllOrders = async (req, res) => {
     }
 };
 
-// Optional: Get a single order by ID
 exports.getOrderById = async (req, res) => {
     try {
         const { id } = req.params;

@@ -19,7 +19,7 @@ const orderSchema = new mongoose.Schema({
         phone: { type: String, required: true },
         country: { type: String, required: true },
         streetAddress1: { type: String, required: true },
-        streetAddress2: { type: String }, // Optional
+        streetAddress2: { type: String },
         city: { type: String, required: true },
         state: { type: String, required: true },
         zip: { type: String, required: true }
@@ -37,15 +37,13 @@ const orderSchema = new mongoose.Schema({
         enum: ['pending', 'succeeded', 'failed', 'refunded'], 
         default: 'pending' 
     },
-    stripeChargeId: { type: String }, // Stripe Charge ID after successful payment
+    stripeChargeId: { type: String },
 
-    // Shipping Details (can be same as billing or separate if you add a 'ship to different address' option)
     shippingDetails: {
         country: { type: String },
         state: { type: String },
         city: { type: String },
         zip: { type: String }
-        // Add more shipping address fields if it can differ from billing
     },
 
     // Timestamps
