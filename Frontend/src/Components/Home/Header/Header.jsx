@@ -4,48 +4,43 @@ import { CiPause1 } from "react-icons/ci";
 import './Header.css';
 
 const layoutsData = [
-    // {
-    //     type: 'two-column',
-    //     videos: [
-    //         {
-    //             id: 1,
-    //             src: '/5-video.mp4',
-    //             title: 'A Bold evolution',
-    //             description: 'A jewel beyond time and trends. Discover the future-oriented and always innovative spirit of the iconic B.zero1 jewelry collection.',
-    //         },
-    //         {
-    //             id: 2,
-    //             src: '/32.mp4',
-    //             title: 'Timeless Radiance',
-    //             description: 'Experience the shimmer of our latest collection, crafted for the modern individual.',
-    //         },
-    //     ],
-    // },
-    // {
-    //     type: 'two-column',
-    //     videos: [
-    //         {
-    //             id: 3,
-    //             src: '/32.mp4',
-    //             title: 'Art of Creation',
-    //             description: 'Witness the meticulous craftsmanship behind every masterpiece.',
-    //         },
-    //         {
-    //             id: 4,
-    //             src: '/5-video.mp4',
-    //             title: 'Legacy of Design',
-    //             description: 'A tribute to heritage, reimagined for tomorrow\'s world.',
-    //         },
-    //     ],
-    // },
+    {
+        type: 'two-column',
+        videos: [
+            {
+                id: 1,
+                src: '/5-video.mp4',
+                title: 'Not Your Keys Pendant'
+            },
+            {
+                id: 2,
+                src: '/32.mp4',
+                title: 'Immutable Pendant'
+            },
+        ],
+    },
+    {
+        type: 'two-column',
+        videos: [
+            {
+                id: 3,
+                src: '/Header-video-1.mp4',
+                title: 'Airborne Bitcoin Pendant'
+            },
+            {
+                id: 4,
+                src: '/Header-video-2.mp4',
+                title: 'Bullish on Bitcoin Pendent'
+            },
+        ],
+    },
     {
         type: 'single-column',
         videos: [
             {
                 id: 5,
-                src: '/5-video.mp4',
-                // title: 'The Solitaire',
-                // description: 'Pure, singular, and breathtaking. The ultimate expression of elegance.',
+                src: '/Header-3.mp4',
+                title: 'Liberty Pendant',
             },
         ],
     },
@@ -61,7 +56,7 @@ const Header = () => {
 
         const timer = setTimeout(() => {
             setCurrentLayoutIndex((prevIndex) => (prevIndex + 1) % layoutsData.length);
-        }, 5000);
+        }, 4000);
 
         return () => clearTimeout(timer);
     }, [currentLayoutIndex, isPlaying]);

@@ -19,9 +19,9 @@ export default function Main() {
                             <a href="/Pendants">
                                 <div className="main-content-wrapper">
                                     <h2 className="showcase-title">
-                                        Unbreakable Satoshi Pendant
+                                        Shield of Satoshi Pendant
                                     </h2>
-                                    <div class="hero-cta-btn-v4">$195.00 - $135.00</div>
+                                    <div class="hero-cta-btn-v4">$95.00 - $135.00</div>
                                 </div>
                             </a>
                         </div>
@@ -40,7 +40,7 @@ export default function Main() {
                                     <h2 className="showcase-title">
                                         Radiant Reserve Pendant
                                     </h2>
-                                    <div class="hero-cta-btn-v4">$175.00 - $380.00</div>
+                                    <div class="hero-cta-btn-v4">$190.00 - $395.00</div>
                                 </div>
                             </a>
                         </div>

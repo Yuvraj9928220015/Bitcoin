@@ -1,4 +1,3 @@
-// server.js
 
 const express = require('express');
 const dotenv = require('dotenv');
@@ -13,12 +12,14 @@ const MongoStore = require('connect-mongo');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+// const path = require("path")
 
 // Import routes
 const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const contactRouter = require('./routes/contactRoutes');
 const registerRoutes = require('./routes/RegisterRoutes');
+const checkoutRoutes = require('./routes/checkoutRoutes')
 
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -26,7 +27,7 @@ const app = express();
 
 
 app.use(cors({
-	origin: 'http://localhost:5173',
+	origin: ["http://localhost:5173", "http://localhost:5174"],
 	credentials: true,
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 	allowedHeaders: [
@@ -42,6 +43,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.set('trust proxy', true);
+
+// const __dirname = path.dirname("")
+// const buildpath = path.join(__dirname, "../Frontend/build")
+// app.use(express.static(buildpath));
+// app.use(
+// 	cors({
+// 		"origin": "*",
+// 	})
+// )
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -304,6 +314,14 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/contact', contactRouter);
 app.use('/api/auth', registerRoutes);
+
+app.use('/api', checkoutRoutes);
+
+app.get('/api/config/stripe', (req, res) => {
+	res.status(200).json({
+		publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+	});
+});
 
 app.use((err, req, res, next) => {
 	console.error('Error:', err);

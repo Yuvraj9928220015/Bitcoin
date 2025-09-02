@@ -15,7 +15,7 @@ import { CiLock } from "react-icons/ci";
 import { useCart } from '../../context/CartContext';
 import './CheckoutPage.css';
 
-const API_URL = 'http://localhost:9000';
+const API_URL = 'http://localhost:9000'; // Ensure this matches your backend URL
 
 const CARD_ELEMENT_OPTIONS = {
     style: {
@@ -27,6 +27,7 @@ const CARD_ELEMENT_OPTIONS = {
             "::placeholder": {
                 color: "#aab7c4",
             },
+            padding: "10px 12px", // Added padding for better appearance
         },
         invalid: {
             color: "#fa755a",
@@ -37,9 +38,6 @@ const CARD_ELEMENT_OPTIONS = {
 
 const CheckoutPage = () => {
     const { cartItems, subtotal, updateQuantity, removeFromCart, clearCart } = useCart();
-
-    const shippingCost = cartItems.length > 0 ? 15.00 : 0;
-    const tax = subtotal * 0.08; // 8% tax
 
     const stripe = useStripe();
     const elements = useElements();
@@ -91,7 +89,12 @@ const CheckoutPage = () => {
         loadStripeConfig();
     }, []);
 
-    const total = subtotal
+    // Calculate total, shipping, tax and final total
+    const shippingCost = cartItems.length > 0 ? 15.00 : 0; // Example static shipping
+    const taxRate = 0.08; // 8% tax rate
+    const calculatedTax = (subtotal + shippingCost) * taxRate;
+
+    let total = subtotal + shippingCost + calculatedTax;
     const finalTotal = appliedCoupon ? total - appliedCoupon.discount : total;
 
     const handleFormChange = (e) => {
@@ -116,18 +119,29 @@ const CheckoutPage = () => {
 
     const handleApplyCoupon = (e) => {
         e.preventDefault();
-        if (couponCode.toLowerCase() === 'save10') {
-            setAppliedCoupon({ code: couponCode, discount: subtotal * 0.1 });
-            alert(`Coupon "${couponCode}" applied! You saved $${(subtotal * 0.1).toFixed(2)}`);
-        } else if (couponCode.toLowerCase() === 'free15') {
-            setAppliedCoupon({ code: couponCode, discount: 15 });
-            alert(`Coupon "${couponCode}" applied! You saved $15.00`);
-        } else if (couponCode.toLowerCase() === 'welcome20') {
-            setAppliedCoupon({ code: couponCode, discount: subtotal * 0.2 });
-            alert(`Coupon "${couponCode}" applied! You saved $${(subtotal * 0.2).toFixed(2)}`);
+        const code = couponCode.toLowerCase();
+        let discountAmount = 0;
+        let discountType = 'fixed'; // 'fixed' or 'percentage'
+
+        if (code === 'save10') {
+            discountAmount = subtotal * 0.1;
+            discountType = 'percentage';
+            setAppliedCoupon({ code: couponCode, discount: discountAmount, type: discountType });
+            alert(`Coupon "${couponCode}" applied! You saved $${discountAmount.toFixed(2)}`);
+        } else if (code === 'free15') {
+            discountAmount = 15;
+            discountType = 'fixed';
+            setAppliedCoupon({ code: couponCode, discount: discountAmount, type: discountType });
+            alert(`Coupon "${couponCode}" applied! You saved $${discountAmount.toFixed(2)}`);
+        } else if (code === 'welcome20') {
+            discountAmount = subtotal * 0.2;
+            discountType = 'percentage';
+            setAppliedCoupon({ code: couponCode, discount: discountAmount, type: discountType });
+            alert(`Coupon "${couponCode}" applied! You saved $${discountAmount.toFixed(2)}`);
         } else {
             alert('❌ Invalid coupon code. Try: SAVE10, FREE15, or WELCOME20');
             setCouponCode('');
+            setAppliedCoupon(null); // Clear any previously applied coupon
             return;
         }
         console.log("Coupon applied:", couponCode);
@@ -135,17 +149,19 @@ const CheckoutPage = () => {
         closeModal();
     };
 
+
     const handleCalculateShipping = (e) => {
         e.preventDefault();
         console.log("Calculating shipping for:", shippingInfo);
 
-        let calculatedShipping = 15.00;
+        let calculatedShipping = 15.00; // Default
         if (shippingInfo.state === 'California') {
             calculatedShipping = 10.00;
         } else if (shippingInfo.country === 'Canada') {
             calculatedShipping = 25.00;
         }
-
+        // In a real app, you'd likely update a state variable for shippingCost here
+        // For this example, we'll just show an alert
         alert(`Shipping calculated: $${calculatedShipping.toFixed(2)} for ${shippingInfo.city}, ${shippingInfo.state}`);
         closeModal();
     };
@@ -160,14 +176,12 @@ const CheckoutPage = () => {
             }
         }
 
-        // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData.email)) {
             alert('Please enter a valid email address.');
             return false;
         }
 
-        // Phone validation (basic)
         const phoneRegex = /^[\d\s\-\+\(\)]+$/;
         if (!phoneRegex.test(formData.phone)) {
             alert('Please enter a valid phone number.');
@@ -216,11 +230,10 @@ const CheckoutPage = () => {
                         city: formData.city,
                         state: formData.state,
                         postal_code: formData.zip,
-                        country: 'US',
+                        country: 'US', // Assuming US based on form
                     }
                 }
             });
-            //
 
             if (error) {
                 console.error("[Stripe Error]", error);
@@ -238,24 +251,33 @@ const CheckoutPage = () => {
                 sessionStorage.getItem('browserId') ||
                 `browser_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+            // Send all relevant data to your custom backend API
             const response = await axios.post(`${API_URL}/api/payment`, {
-                amount: amountInCents,
-                id: paymentMethod.id,
+                amount: amountInCents, // Total amount in cents
+                id: paymentMethod.id, // Stripe PaymentMethod ID
                 browserId: browserId,
-                items: cartItems,
-                customerInfo: formData,
-                note: note
+                items: cartItems.map(item => ({ // Map cart items to match your Order model schema
+                    productId: item.id || item.cartId, // Use a unique product identifier
+                    name: item.name,
+                    image: item.image,
+                    price: item.price,
+                    quantity: item.quantity,
+                    size: item.size
+                })),
+                customerInfo: formData, // All billing details
+                note: note, // Any customer notes
+                appliedCoupon: appliedCoupon // Coupon details if applied
             });
 
             if (response.data.success) {
                 console.log("✅ Payment successful!");
                 console.log("Payment details:", response.data);
 
-                // Show success alert
-                alert(`Payment Successful! 
-                
+                alert(`Payment Successful!
+
  Payment ID: ${response.data.paymentId}
  Amount: $${(response.data.amount / 100).toFixed(2)}
+ Order ID: ${response.data.orderId}
  Confirmation sent to: ${response.data.customerEmail || formData.email}
 
 Thank you for your purchase! You can check your payment in the Stripe dashboard.`);
@@ -265,13 +287,43 @@ Thank you for your purchase! You can check your payment in the Stripe dashboard.
                     message: 'Payment successful! Thank you for your order.',
                     paymentId: response.data.paymentId,
                     amount: response.data.amount,
-                    customerEmail: response.data.customerEmail || formData.email
+                    customerEmail: response.data.customerEmail || formData.email,
+                    orderId: response.data.orderId
                 });
 
                 clearCart();
-
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
+            } else if (response.data.requiresAction && response.data.clientSecret) {
+                // Handle 3D Secure or other actions required by Stripe
+                console.log('⚠️ Payment requires action (e.g., 3D Secure). Confirming card payment...');
+                const { paymentIntent, error: confirmError } = await stripe.confirmCardPayment(response.data.clientSecret);
+
+                if (confirmError) {
+                    console.error("[Stripe Confirm Error]", confirmError);
+                    alert(`❌ Payment requires action but failed: ${confirmError.message}`);
+                    setPaymentStatus({ status: 'error', message: confirmError.message });
+                } else if (paymentIntent.status === 'succeeded') {
+                    console.log('✅ Payment succeeded after authentication!', paymentIntent);
+                    alert('Payment successful after authentication!');
+                    // You might need to make another API call to your backend to finalize the order
+                    // or the backend might handle this via webhooks. For simplicity, we'll
+                    // assume the initial success response handles it.
+                    setPaymentStatus({
+                        status: 'success',
+                        message: 'Payment successful after authentication!',
+                        paymentId: paymentIntent.id,
+                        amount: paymentIntent.amount,
+                        customerEmail: formData.email,
+                        orderId: response.data.orderId // Assuming orderId might come from initial response
+                    });
+                    clearCart();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    console.error("❌ Payment failed after action:", paymentIntent);
+                    alert(`❌ Payment failed after authentication: ${paymentIntent.status}`);
+                    setPaymentStatus({ status: 'error', message: `Payment failed after authentication: ${paymentIntent.status}` });
+                }
             } else {
                 console.error("❌ Payment failed on server:", response.data.message);
                 alert(`❌ Payment Failed: ${response.data.message}`);
@@ -312,6 +364,7 @@ Thank you for your purchase! You can check your payment in the Stripe dashboard.
                         margin: '1.5rem 0'
                     }}>
                         <p><strong>Payment ID:</strong> {paymentStatus.paymentId}</p>
+                        <p><strong>Order ID:</strong> {paymentStatus.orderId || 'N/A'}</p>
                         <p><strong>Amount:</strong> ${(paymentStatus.amount / 100).toFixed(2)} USD</p>
                         <p><strong>📧 Confirmation sent to:</strong> {paymentStatus.customerEmail}</p>
                         <p><strong>📅 Date:</strong> {new Date().toLocaleDateString()}</p>
@@ -481,14 +534,14 @@ Thank you for your purchase! You can check your payment in the Stripe dashboard.
                                 <span>Subtotal ({cartItems.length} items)</span>
                                 <span>${subtotal.toFixed(2)}</span>
                             </div>
-                            {/* <div className="order-summary-line">
+                            <div className="order-summary-line">
                                 <span>Shipping</span>
                                 <span>${shippingCost.toFixed(2)}</span>
                             </div>
                             <div className="order-summary-line">
-                                <span>Tax (8%)</span>
-                                <span>${tax.toFixed(2)}</span>
-                            </div> */}
+                                <span>Tax ({taxRate * 100}%)</span>
+                                <span>${calculatedTax.toFixed(2)}</span>
+                            </div>
                             {appliedCoupon && (
                                 <div className="order-summary-line coupon-discount" style={{ color: '#28a745' }}>
                                     <span>💰 Discount ({appliedCoupon.code})</span>
@@ -556,20 +609,20 @@ Thank you for your purchase! You can check your payment in the Stripe dashboard.
                             <button
                                 type="submit"
                                 className="place-order-btn"
-                                disabled={isProcessing || !stripe || cartItems.length === 0}
+                                disabled={isProcessing || !stripe || !elements || cartItems.length === 0}
                                 style={{
-                                    opacity: (isProcessing || !stripe || cartItems.length === 0) ? 0.6 : 1,
-                                    cursor: (isProcessing || !stripe || cartItems.length === 0) ? 'not-allowed' : 'pointer'
+                                    opacity: (isProcessing || !stripe || !elements || cartItems.length === 0) ? 0.6 : 1,
+                                    cursor: (isProcessing || !stripe || !elements || cartItems.length === 0) ? 'not-allowed' : 'pointer'
                                 }}
                             >
                                 {isProcessing ? (
                                     "🔄 Processing Payment..."
                                 ) : cartItems.length === 0 ? (
                                     "Add items to cart"
-                                ) : !stripe ? (
+                                ) : (!stripe || !elements) ? (
                                     "Loading payment system..."
                                 ) : (
-                                    `💳 Place order (${finalTotal.toFixed(2)})`
+                                    `💳 Place order $${finalTotal.toFixed(2)}`
                                 )}
                             </button>
                         </div>
