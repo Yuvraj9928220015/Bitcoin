@@ -56,7 +56,7 @@ label[for="streetAddress2"]::after {
 .form-group select {
     width: 100%;
     padding: 12px;
-    border: 1px solid #dcdcdc;
+    border: 2px solid #dcdcdc;
     border-radius: 4px;
     font-size: 16px;
     box-sizing: border-box;

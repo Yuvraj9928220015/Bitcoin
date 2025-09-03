@@ -1001,7 +1001,7 @@
 .login-form .form-group input {
     padding: 12px 16px;
     border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    border-radius: 4px;
     font-size: 1rem;
     transition: all 0.3s ease;
     background-color: #f8fafc;

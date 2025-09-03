@@ -1,0 +1,167 @@
+.user-data-container {
+    padding: 20px;
+    font-family: 'Poppins', sans-serif;
+
+    color: #444;
+    max-width: 1400px;
+    margin: 100px auto;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px #0000000d;
+}
+
+.user-data-container h2 {
+    text-align: center;
+    color: #3b5998;
+    margin-bottom: 30px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* --- Table Styles --- */
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 2px 10px #0000000d;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead tr {
+    background-color: #3b5998;
+    color: white;
+    text-align: left;
+}
+
+th,
+td {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: left;
+}
+
+th {
+    font-weight: 500;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+tbody tr:hover {
+    background-color: #eef2f6;
+    transition: background-color 0.3s ease;
+}
+
+.registration-date,
+.registration-time {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.registration-time {
+    font-style: italic;
+}
+
+/* --- Status Indicators (for Terms and Newsletter) --- */
+.status-yes {
+    color: #28a745;
+    font-weight: 500;
+}
+
+.status-no {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* --- Status & Error Messages --- */
+.status-container {
+    text-align: center;
+    padding: 40px;
+    border-radius: 12px;
+    margin: 40px auto;
+    box-shadow: 0 4px 15px #00000014;
+}
+
+.loading {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+}
+
+.spinner {
+    border: 4px solid #0000001a;
+    border-top-color: #3b5998;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin: 10px auto 0;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error-message {
+    color: #d32f2f;
+    background-color: #ffebee;
+    border: 1px solid #ef9a9a;
+}
+
+.no-data {
+    color: #777;
+    background-color: #f8f9fa;
+    border: 1px solid #cdd4da;
+}
+
+/* --- Responsive Design for smaller screens --- */
+@media screen and (max-width: 768px) {
+    .user-data-container {
+        padding: 10px;
+        margin: 20px auto;
+    }
+
+    table {
+        box-shadow: none;
+    }
+
+    thead {
+        display: none;
+    }
+
+    tr {
+        display: block;
+        margin-bottom: 15px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+
+    td {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    td:last-child {
+        border-bottom: 0;
+    }
+
+    td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #777;
+        margin-right: 15px;
+        flex-shrink: 0;
+        text-transform: none;
+        font-size: 0.9em;
+    }
+}

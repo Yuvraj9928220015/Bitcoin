@@ -98,7 +98,6 @@ exports.loginUser = async (req, res, next) => {
 };
 
 exports.getMe = async (req, res, next) => {
-    // req.user.id is set by the 'protect' middleware
     if (!req.user || !req.user.id) {
         return res.status(401).json({ message: 'Not authorized, no user data from token.' });
     }

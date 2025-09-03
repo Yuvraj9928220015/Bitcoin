@@ -7,6 +7,7 @@ const path = require('path');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const cookieParser = require('cookie-parser');
 
 dotenv.config();
 
@@ -17,7 +18,6 @@ const MongoStore = require('connect-mongo');
 const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const contactRouter = require('./routes/contactRoutes');
-const registerRoutes = require('./routes/RegisterRoutes');
 const checkoutRoutes = require('./routes/checkoutRoutes');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -38,6 +38,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.set('trust proxy', true);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -49,7 +50,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_for_jwt_change_in_
 console.log("=== STRIPE CONFIGURATION CHECK ===");
 console.log("Secret Key configured:", !!process.env.STRIPE_SECRET_KEY);
 console.log("Secret Key starts with sk_:", process.env.STRIPE_SECRET_KEY?.startsWith('sk_'));
-console.log("Publishable Key configured:", !!process.env.STRIPE_PUBLISHABLE_KEY);
+console.log("Publishable Key configured:", !!process.env.STRIPE_PUBLISHable_KEY);
 console.log("Publishable Key starts with pk_:", process.env.STRIPE_PUBLISHABLE_KEY?.startsWith('pk_'));
 console.log("Environment:", process.env.NODE_ENV);
 console.log("Email User:", process.env.EMAIL_USER);
@@ -100,13 +101,18 @@ app.use(session({
     name: 'bitcoine.browser.session'
 }));
 
-// --- New: User Schema and Model ---
 const userSchema = new mongoose.Schema({
+    title: { type: String }, 
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-});
+    country: { type: String, required: true },
+    termsAgreed: { type: Boolean, required: true, default: false },
+    newsletterAgreed: { type: Boolean, default: false },
+}, { timestamps: true });
 const User = mongoose.model('User', userSchema);
-// --- End: User Schema and Model ---
+
 
 app.use((req, res, next) => {
     req.browserInfo = {
@@ -131,7 +137,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- New: Authentication Middleware ---
 const verifyAuth = (req, res, next) => {
     const token = req.cookies.token;
     if (!token) {
@@ -142,13 +147,11 @@ const verifyAuth = (req, res, next) => {
         req.user = decoded.id;
         next();
     } catch (err) {
-        res.clearCookie('token'); // Clear invalid token
+        res.clearCookie('token');
         res.status(401).json({ message: 'Token is not valid.' });
     }
 };
 
-// --- New: Auth Routes ---
-// Login Route
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -164,14 +167,13 @@ app.post('/api/auth/login', async (req, res) => {
 
         const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
 
-        // Set the token as a secure, httpOnly cookie
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 3600000 // 1 hour
+            maxAge: 3600000
         });
-        
+
         res.json({ success: true, message: 'Login successful' });
 
     } catch (err) {
@@ -180,26 +182,54 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// Register Route
 app.post('/api/auth/register', async (req, res) => {
-    const { email, password } = req.body;
+    const { title, firstName, lastName, country, email, password, termsAgreed, newsletterAgreed } = req.body;
+
+    if (!firstName || !lastName || !email || !password || !termsAgreed) {
+        return res.status(400).json({ message: 'Please enter all required fields and agree to terms.' });
+    }
+
     try {
         let user = await User.findOne({ email });
         if (user) {
-            return res.status(400).json({ success: false, message: 'User already exists' });
+            return res.status(400).json({ message: 'User with this email already exists.' });
         }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        user = new User({ email, password: hashedPassword });
-        await user.save();
+        user = await User.create({
+            title,
+            firstName,
+            lastName,
+            country,
+            email,
+            password: hashedPassword,
+            termsAgreed,
+            newsletterAgreed
+        });
 
-        res.status(201).json({ success: true, message: 'User registered successfully' });
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, {
+            expiresIn: '1h'
+        });
 
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(201).json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                firstName: user.firstName,
+                email: user.email
+            },
+            message: 'User registered successfully!'
+        });
+
+    } catch (error) {
+        console.error("Registration error:", error);
+        res.status(500).json({
+            message: 'Server error during registration.',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong.'
+        });
     }
 });
 
@@ -222,7 +252,64 @@ app.get('/api/auth/verify', (req, res) => {
         res.json({ authenticated: false });
     }
 });
-// --- End: Auth Routes ---
+
+app.get('/api/users', verifyAuth, async (req, res) => {
+    try {
+        const users = await User.find().select('-password');
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("Error fetching all users:", error);
+        res.status(500).json({
+            message: 'Server error fetching user data.',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong.'
+        });
+    }
+});
+
+// app.get('/api/users', verifyAuth, async (req, res) => {
+//     try {
+//         const users = await User.find().select('-password');
+//         res.status(200).json(users);
+//     } catch (error) {
+//         console.error("Error fetching all users:", error);
+//         res.status(500).json({
+//             message: 'Server error fetching user data.',
+//             error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong.'
+//         });
+//     }
+// });
+
+
+
+// --- END NEW Route ---
+
+// --- NEW: API Endpoint for Contact Information ---
+app.get('/api/contact-info', (req, res) => {
+    try {
+        const contactDetails = {
+            companyName: "Bitcoine Jewelry",
+            email: "support@bitcoine.com",
+            phone: "+1 (800) 555-0199",
+            address: "123 Gemstone Alley, Jewel City, JC 10001, USA",
+            hours: {
+                mondayToFriday: "9:00 AM - 6:00 PM EST",
+                saturday: "10:00 AM - 4:00 PM EST",
+                sunday: "Closed"
+            },
+            socialMedia: {
+                facebook: "https://facebook.com/bitcoinejewelry",
+                instagram: "https://instagram.com/bitcoinejewelry",
+                twitter: "https://twitter.com/bitcoinejewelry"
+            }
+        };
+        res.status(200).json(contactDetails);
+    } catch (error) {
+        console.error("Error fetching contact info:", error);
+        res.status(500).json({ message: "Failed to retrieve contact information." });
+    }
+});
+// --- END NEW API Endpoint ---
+
 
 console.log("Nodemailer transporter configured:", !!transporter);
 
@@ -372,7 +459,6 @@ app.post("/api/payment", async (req, res) => {
 
         let errorMessage = "Payment failed. Please try again.";
 
-        // Handle specific Stripe errors
         if (error.type === 'StripeCardError') {
             errorMessage = `Card Error: ${error.message}`;
         } else if (error.type === 'StripeInvalidRequestError') {
@@ -397,15 +483,12 @@ app.post("/api/payment", async (req, res) => {
     }
 });
 
-// API Routes
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/contact', contactRouter);
 app.use('/api', checkoutRoutes);
 
-// You can now protect this route with the `verifyAuth` middleware
 app.get('/api/products-protected', verifyAuth, (req, res) => {
-    // This route is now protected and only accessible to logged-in users
     res.json({ message: 'This is a protected route. You are authenticated!' });
 });
 
@@ -462,7 +545,9 @@ app.listen(PORT, () => {
     console.log(`API Health Check: http://localhost:${PORT}/health`);
     console.log(`Browser-Specific Cart API: http://localhost:${PORT}/api/cart`);
     console.log(`Stripe Configuration: http://localhost:${PORT}/api/config/stripe`);
-    console.log(`User Authentication API: http://localhost:${PORT}/api/auth/register`); // New Auth endpoint
+    console.log(`User Authentication API: http://localhost:${PORT}/api/auth/register`);
+    console.log(`Users List API: http://localhost:${PORT}/api/users (Protected)`); // New endpoint
+    console.log(`Contact Info API: http://localhost:${PORT}/api/contact-info`); // NEW endpoint
     console.log(`No login required for cart - Cart tied to browser/device`);
     console.log(`Hybrid storage: localStorage + MongoDB for persistence`);
 
@@ -480,7 +565,6 @@ app.listen(PORT, () => {
     }
 });
 
-// Cleanup function for old carts
 const cleanupOldCarts = async () => {
     try {
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

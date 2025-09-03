@@ -37,7 +37,9 @@ import Privacy from './Components/Pages/Privacy/Privacy';
 import FAQ from './Components/Pages/FAQ/FAQ';
 import Return from './Components/Pages/Return/Return';
 import Terms from './Components/Pages/Terms/Terms';
-import Admin from './Components/Dashboard/Admin/Admin';
+// import Admin from './Components/Dashboard/Admin/Admin';
+import ContactData from './Components/Dashboard/ContactData/ContactData';
+import UserData from './Components/Dashboard/UserData/UserData';
 axios.defaults.baseURL = 'http://localhost:9000';
 axios.defaults.withCredentials = true;
 
@@ -187,7 +189,9 @@ function App() {
             <Route path="/Terms" element={<Terms />} />
             <Route path="/ProductList" element={<ProductList />} />
             <Route path="/Contact" element={<Contact />} />
-            <Route path="/Admin" element={<Admin />} />
+            <Route path="/UserData" element={<UserData />} />
+            {/* <Route path="/Admin" element={<Admin />} /> */}
+            <Route path="/ContactData" element={<ContactData />} />
             <Route path="/AddedToCartNotification" element={<AddedToCartNotification />} />
             <Route path="/CheckoutPage" element={
               stripePromise ? (
