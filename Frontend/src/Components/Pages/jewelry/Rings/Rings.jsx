@@ -20,7 +20,6 @@ const ProductCard = ({ product }) => {
     }, [images]);
 
     useEffect(() => {
-        // Only start slideshow on hover if there is no video to play
         if (isHovered && !product.video) {
             startSlideshow();
         } else {
@@ -33,7 +32,7 @@ const ProductCard = ({ product }) => {
 
     const handleManualChange = (newIndex) => {
         setCurrentImageIndex(newIndex);
-        if (isHovered && !product.video) { // Restart slideshow if hovering
+        if (isHovered && !product.video) {
             startSlideshow();
         }
     };
@@ -105,7 +104,6 @@ const ProductCard = ({ product }) => {
 
                 {product.tagText && <span className="product-tag">{product.tagText}</span>}
 
-                {/* --- SLIDESHOW CONTROLS (Only show if not hovering on a video) --- */}
                 {!(isHovered && product.video) && images.length > 1 && (
                     <>
                         <div className={`slider-dots ${isHovered ? 'visible' : ''}`}>

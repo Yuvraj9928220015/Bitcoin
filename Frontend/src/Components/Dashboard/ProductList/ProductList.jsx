@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import './ProductList.css';
+import './ProductList.css'; // Make sure you have this CSS file
+import Cookies from 'js-cookie'; // Import js-cookie for client-side cookie management
 
-const API_URL = 'http://localhost:9000';
+const API_URL = 'http://localhost:9000'; // Your backend API URL
 const MAX_IMAGES = 10;
 
+// Initial state for a new product
 const initialProductState = {
     id: null,
     title: '',
     description: '',
     price: '',
     category: '',
-    images: Array(MAX_IMAGES).fill(null),
-    video: null,
+    images: Array(MAX_IMAGES).fill(null), // Array to hold up to MAX_IMAGES image files/paths
+    video: null, // To hold the video file/path
 };
 
 export default function ProductList() {
+    // --- Authentication State ---
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loginData, setLoginData] = useState({
         email: '',
@@ -23,76 +26,74 @@ export default function ProductList() {
     });
     const [loginError, setLoginError] = useState('');
     const [isLoggingIn, setIsLoggingIn] = useState(false);
+    // --- End Authentication State ---
 
     const [products, setProducts] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
-    const [showForm, setShowForm] = useState(false);
-    const [showProductModal, setShowProductModal] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
-    const [currentProduct, setCurrentProduct] = useState(initialProductState);
-    const [imagePreviews, setImagePreviews] = useState(Array(MAX_IMAGES).fill(null));
-    const [videoPreview, setVideoPreview] = useState(null);
-    const [activeMedia, setActiveMedia] = useState({ src: '', type: 'image' });
-    const [searchTerm, setSearchTerm] = useState('');
+    const [showForm, setShowForm] = useState(false); // To show/hide add/edit product form
+    const [showProductModal, setShowProductModal] = useState(false); // To show/hide product detail modal
+    const [selectedProduct, setSelectedProduct] = useState(null); // Product selected for detail view
+    const [currentProduct, setCurrentProduct] = useState(initialProductState); // Product being added/edited
+    const [imagePreviews, setImagePreviews] = useState(Array(MAX_IMAGES).fill(null)); // URLs for image previews
+    const [videoPreview, setVideoPreview] = useState(null); // URL for video preview
+    const [activeMedia, setActiveMedia] = useState({ src: '', type: 'image' }); // For the main media viewer in product modal
+    const [searchTerm, setSearchTerm] = useState(''); // For searching products
 
+    // Effect to check authentication status on component mount
     useEffect(() => {
         checkAuthStatus();
     }, []);
 
+    // Effect to fetch products only when authenticated
     useEffect(() => {
         if (isAuthenticated) {
             fetchProducts();
         }
     }, [isAuthenticated]);
 
-    const checkAuthStatus = async () => {
-        try {
-            const response = await axios.get(`${API_URL}/api/auth/verify`, {
-                withCredentials: true
-            });
-            if (response.data.authenticated) {
-                setIsAuthenticated(true);
-            }
-        } catch (error) {
-            console.log("Not authenticated or error verifying auth:", error);
+    // Function to check authentication status using the 'admin_token' cookie
+    const checkAuthStatus = () => {
+        const token = Cookies.get('admin_token');
+        if (token) {
+            // In a real app, you might want to verify this token with your backend.
+            // For now, presence of the token means authenticated.
+            setIsAuthenticated(true);
+        } else {
             setIsAuthenticated(false);
         }
     };
 
+    // Handles user login
     const handleLogin = async (e) => {
         e.preventDefault();
         setIsLoggingIn(true);
-        setLoginError('');
+        setLoginError(''); // Clear previous errors
 
         try {
-            const response = await axios.post(`${API_URL}/api/auth/login`, loginData, {
-                withCredentials: true
-            });
+            const response = await axios.post(`${API_URL}/api/auth/login`, loginData);
 
             if (response.data.success) {
+                Cookies.set('admin_token', response.data.token, { expires: 1 }); // Store token in a cookie named 'admin_token'
                 setIsAuthenticated(true);
-                setLoginData({ email: '', password: '' });
+                setLoginData({ email: '', password: '' }); // Clear form
+            } else {
+                setLoginError(response.data.message || 'Login failed. Please try again.');
             }
         } catch (error) {
-            setLoginError(error.response?.data?.message || 'Login failed. Please try again.');
+            setLoginError(error.response?.data?.message || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoggingIn(false);
         }
     };
 
     // Handles user logout
-    const handleLogout = async () => {
-        try {
-            await axios.post(`${API_URL}/api/auth/logout`, {}, {
-                withCredentials: true
-            });
-            setIsAuthenticated(false);
-            setProducts([]);
-        } catch (error) {
-            console.error("Logout error:", error);
-        }
+    const handleLogout = () => {
+        Cookies.remove('admin_token'); // Remove the specific admin token
+        setIsAuthenticated(false);
+        setProducts([]); // Clear products on logout
     };
 
+    // Handles input changes for the login form
     const handleLoginInputChange = (e) => {
         const { name, value } = e.target;
         setLoginData(prev => ({
@@ -101,31 +102,48 @@ export default function ProductList() {
         }));
     };
 
+    // Fetches products from the backend, including authorization header
     const fetchProducts = async () => {
+        const token = Cookies.get('admin_token');
+        if (!token) {
+            setIsAuthenticated(false);
+            return;
+        }
+
         try {
             const response = await axios.get(`${API_URL}/api/products`, {
-                withCredentials: true
+                headers: {
+                    'Authorization': `Bearer ${token}` // Send the token in the Authorization header
+                }
             });
             setProducts(response.data);
         } catch (error) {
             console.error("Error fetching products:", error);
             if (error.response?.status === 401) {
+                // If unauthorized, set isAuthenticated to false to show login form
+                Cookies.remove('admin_token'); // Remove invalid token
                 setIsAuthenticated(false);
+                setLoginError('Session expired or unauthorized. Please log in again.');
+            } else {
+                setLoginError('Failed to load products. Please try again later.');
             }
         }
     };
 
+    // Handles input changes for product form fields (title, description, price, category)
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setCurrentProduct({ ...currentProduct, [name]: value });
     };
 
+    // Handles image file selection
     const handleImageFileChange = (e, index) => {
         const file = e.target.files[0];
         if (file) {
             const newImages = [...currentProduct.images];
             const newPreviews = [...imagePreviews];
 
+            // Revoke old URL if it exists to prevent memory leaks
             if (newPreviews[index] && newPreviews[index].startsWith('blob:')) {
                 URL.revokeObjectURL(newPreviews[index]);
             }
@@ -137,9 +155,11 @@ export default function ProductList() {
         }
     };
 
+    // Handles video file selection
     const handleVideoFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Revoke old URL if it exists
             if (videoPreview && videoPreview.startsWith('blob:')) {
                 URL.revokeObjectURL(videoPreview);
             }
@@ -148,6 +168,7 @@ export default function ProductList() {
         }
     };
 
+    // Handles removing an image from the form
     const handleRemoveImage = (e, index) => {
         e.preventDefault();
         e.stopPropagation();
@@ -163,10 +184,12 @@ export default function ProductList() {
 
         setCurrentProduct({ ...currentProduct, images: newImages });
         setImagePreviews(newPreviews);
+        // Reset file input value to allow re-uploading the same file
         const fileInput = document.getElementById(`image-input-${index}`);
         if (fileInput) fileInput.value = '';
     };
 
+    // Handles removing a video from the form
     const handleRemoveVideo = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -188,14 +211,13 @@ export default function ProductList() {
         formData.append('price', currentProduct.price);
         formData.append('category', currentProduct.category);
 
-        // --- Handle Images ---
         const imageOrder = [];
         const newImageFiles = [];
 
         currentProduct.images.forEach(img => {
-            if (typeof img === 'string') {
+            if (typeof img === 'string') { // Existing image path
                 imageOrder.push(img);
-            } else if (img instanceof File) {
+            } else if (img instanceof File) { // New image file
                 imageOrder.push(`NEW_FILE_${newImageFiles.length}`);
                 newImageFiles.push(img);
             }
@@ -211,27 +233,37 @@ export default function ProductList() {
             formData.append('images', file);
         });
 
-        if (currentProduct.video instanceof File) {
+        if (currentProduct.video instanceof File) { // New video file
             formData.append('video', currentProduct.video);
-        } else if (isEditing && currentProduct.video === '') { 
+        } else if (isEditing && currentProduct.video === '') { // Existing video removed
             formData.append('video', '');
         }
+
+        const token = Cookies.get('admin_token'); // Get token for API calls
 
         try {
             if (isEditing) {
                 await axios.put(`${API_URL}/api/products/${currentProduct.id}`, formData, {
-                    withCredentials: true
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': `Bearer ${token}`
+                    },
                 });
             } else {
                 await axios.post(`${API_URL}/api/products`, formData, {
-                    withCredentials: true
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': `Bearer ${token}`
+                    },
                 });
             }
             resetForm();
             fetchProducts();
         } catch (error) {
             if (error.response?.status === 401) {
+                Cookies.remove('admin_token');
                 setIsAuthenticated(false);
+                alert('Session expired. Please log in again.');
             }
             alert(`Error: ${error.response?.data?.message || error.message}`);
         }
@@ -266,14 +298,19 @@ export default function ProductList() {
 
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
+            const token = Cookies.get('admin_token');
             try {
                 await axios.delete(`${API_URL}/api/products/${id}`, {
-                    withCredentials: true
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
                 fetchProducts();
             } catch (error) {
                 if (error.response?.status === 401) {
+                    Cookies.remove('admin_token');
                     setIsAuthenticated(false);
+                    alert('Session expired. Please log in again.');
                 }
                 console.error("Error deleting product:", error);
             }
@@ -303,22 +340,27 @@ export default function ProductList() {
         setShowProductModal(true);
     };
 
+    // Closes the product detail modal
     const closeModal = () => {
         setShowProductModal(false);
         setSelectedProduct(null);
         setActiveMedia({ src: '', type: 'image' });
     };
 
+    // Filters products based on search term
     const filteredProducts = products.filter(product =>
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+        product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Render login form if not authenticated
     if (!isAuthenticated) {
         return (
             <div className="product-login-container">
                 <div className="login-card">
                     <div className="login-header">
-                        <h1>Admin Panel</h1>
+                        <h1>Admin Panel Login</h1>
                     </div>
 
                     <form onSubmit={handleLogin} className="login-form">
@@ -367,15 +409,16 @@ export default function ProductList() {
         );
     }
 
+    // Render product management interface if authenticated
     return (
         <div className="product-list-page">
             <main className="main-content">
                 <header className="page-header">
-                    <h1>Products</h1>
+                    <h1>Products Management</h1>
                     <div className="search-container">
                         <input
                             type="text"
-                            placeholder="Search by category..."
+                            placeholder="Search by title, category or description..."
                             className="search-input"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -386,6 +429,10 @@ export default function ProductList() {
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             Add Product
                         </button>
+                        <button onClick={handleLogout} className="logout-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            Logout
+                        </button>
                     </div>
                 </header>
 
@@ -395,7 +442,7 @@ export default function ProductList() {
                             <tr>
                                 <th className="image-col">Image</th>
                                 <th>Title</th>
-                                <th>description</th>
+                                <th>Description</th>
                                 <th>Category</th>
                                 <th>Price</th>
                                 <th className="actions-col">Actions</th>
@@ -433,7 +480,7 @@ export default function ProductList() {
                                     </td>
                                 </tr>
                             )) : (
-                                <tr><td colSpan="6" className="empty-state"><div className="empty-state-content"><h3>No products found</h3></div></td></tr>
+                                <tr><td colSpan="6" className="empty-state"><div className="empty-state-content"><h3>No products found</h3><p>Add a new product to get started!</p></div></td></tr>
                             )}
                         </tbody>
                     </table>
@@ -546,6 +593,7 @@ export default function ProductList() {
                                 <div className="info-price">${Number(selectedProduct.price).toFixed(2)}</div>
                                 <div className="info-actions">
                                     <button onClick={() => { closeModal(); handleEditClick(selectedProduct); }} className="btn-primary">Edit Product</button>
+                                    <p></p>
                                 </div>
                             </div>
                         </div>

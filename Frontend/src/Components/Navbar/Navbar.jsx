@@ -694,7 +694,7 @@ const Navbar = () => {
                         </div>
                         <div className="login-content">
                             <p className="signup-intro">
-                                Create your account to be part of the Bulgari world,
+                                Create your account to be part of the BitcoinButik world,
                                 discover our new collections and receive news from the Maison.
                             </p>
                             <form className="signup-form" onSubmit={handleSignup}>
@@ -816,7 +816,7 @@ const Navbar = () => {
                                         <span className="checkmark"></span>
                                         I agree to share information regarding my interests, preferences
                                         and purchasing habits (profiling) based on my purchases
-                                        made at Bulgari and other LVMH Maisons.
+                                        made at Bitcoinbutik and other LVMH Maisons.
                                     </label>
                                 </div>
                                 <div className="form-group checkbox-group">
