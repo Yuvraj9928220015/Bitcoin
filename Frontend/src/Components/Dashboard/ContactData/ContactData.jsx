@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import './ContactData.css'; // Assuming you have this CSS file for styling
+import './ContactData.css';
 
 const ContactData = () => {
     const [contacts, setContacts] = useState([]);
@@ -11,13 +11,12 @@ const ContactData = () => {
             setLoading(true);
             setError(null);
             try {
-                // IMPORTANT: Changed endpoint to '/api/contact'
                 const response = await fetch('http://localhost:9000/api/contact', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    credentials: 'include' // Important for sending cookies if your auth uses them
+                    credentials: 'include'
                 });
 
                 if (response.status === 401) {
@@ -66,6 +65,7 @@ const ContactData = () => {
             <div className="contact-data-container status-container error-message">
                 <p>Error: {error}</p>
                 <p>Please ensure you are logged in and have the necessary permissions to view contact submissions.</p>
+                <p>Also, check if your backend server is running on `http://localhost:9000` and the `/api/contact` endpoint is configured to return data.</p>
             </div>
         );
     }
@@ -74,14 +74,15 @@ const ContactData = () => {
         return (
             <div className="contact-data-container status-container no-data">
                 <p>No contact submissions found. 😞</p>
-                <p>Users can submit contacts through your contact form.</p>
+                <p>Users can submit contacts through your contact form. Make sure your database has some entries.</p>
             </div>
         );
     }
 
+    // --- Data Display UI ---
     return (
         <div className="contact-data-container">
-            <h2>Contact Submissions 📧</h2>
+            <h2>Contact Submissions</h2>
             <div className="table-responsive">
                 <table>
                     <thead>
@@ -95,11 +96,12 @@ const ContactData = () => {
                             <th>Subject</th>
                             <th>Message</th>
                             <th>Submission Date</th>
+                            <th>Submission Time</th>
                         </tr>
                     </thead>
                     <tbody>
                         {contacts.map((contact, index) => (
-                            <tr key={contact._id || index}> {/* Use _id if available, otherwise index */}
+                            <tr key={contact._id || index}>
                                 <td data-label="#">{index + 1}</td>
                                 <td data-label="First Name">{contact.firstName || 'N/A'}</td>
                                 <td data-label="Last Name">{contact.lastName || 'N/A'}</td>
@@ -109,6 +111,7 @@ const ContactData = () => {
                                 <td data-label="Subject">{contact.subject || 'N/A'}</td>
                                 <td data-label="Message">{contact.message || 'N/A'}</td>
                                 <td data-label="Submission Date">{contact.submissionDate || 'N/A'}</td>
+                                <td data-label="Submission Time">{contact.submissionTime || 'N/A'}</td>
                             </tr>
                         ))}
                     </tbody>

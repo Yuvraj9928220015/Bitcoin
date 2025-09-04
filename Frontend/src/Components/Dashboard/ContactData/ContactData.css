@@ -1,10 +1,10 @@
 .contact-data-container {
-    max-width: 1200px;
-    margin: 40px auto;
+    max-width: 1600px;
+    margin: 100px auto;
     padding: 20px;
     background-color: #fff;
     border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px #0000001a;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
 }
@@ -59,9 +59,9 @@ table thead tr {
 
 table th,
 table td {
-    padding: 12px 15px;
+    padding: 18px 15px;
     border: 1px solid #ddd;
-    vertical-align: top; /* Align content to the top */
+    vertical-align: top;
 }
 
 table tbody tr:nth-of-type(even) {
@@ -73,8 +73,8 @@ table tbody tr:hover {
 }
 
 .message-cell {
-    max-width: 250px; /* Limit width of message cell */
-    white-space: normal; /* Allow text to wrap */
+    max-width: 250px;
+    white-space: normal;
     word-wrap: break-word;
 }
 
@@ -178,7 +178,7 @@ table tbody tr:hover {
     padding: 10px;
     border: 1px solid #ced4da;
     border-radius: 4px;
-    box-sizing: border-box; /* Ensures padding doesn't increase width */
+    box-sizing: border-box;
 }
 
 .login-button {
@@ -215,8 +215,6 @@ table tbody tr:hover {
     border-radius: 4px;
 }
 
-
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .contact-data-container {
         margin: 20px auto;
@@ -224,7 +222,7 @@ table tbody tr:hover {
     }
 
     table thead {
-        display: none; /* Hide table headers on small screens */
+        display: none;
     }
 
     table, table tbody, table tr, table td {
@@ -236,7 +234,7 @@ table tbody tr:hover {
         margin-bottom: 15px;
         border: 1px solid #ddd;
         border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 5px #0000000d;
     }
 
     table td {

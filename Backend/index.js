@@ -8,20 +8,18 @@ const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const cookieParser = require('cookie-parser');
-
-dotenv.config();
-
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
-// Import routes
-const productRoutes = require('./routes/productRoutes');
-const cartRoutes = require('./routes/cartRoutes');
-const contactRouter = require('./routes/contactRoutes');
-const checkoutRoutes = require('./routes/checkoutRoutes');
+dotenv.config();
+
+const app = express();
+
+const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Bitcoine";
+const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_for_jwt_change_in_production';
+const PORT = process.env.PORT || 9000;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const app = express();
 
 app.use(cors({
     origin: ["http://localhost:5173", "http://localhost:5174"],
@@ -35,36 +33,11 @@ app.use(cors({
     ],
     exposedHeaders: ['X-Browser-ID']
 }));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
 app.set('trust proxy', true);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Bitcoine";
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_for_jwt_change_in_production';
-
-// Validation logs
-console.log("=== STRIPE CONFIGURATION CHECK ===");
-console.log("Secret Key configured:", !!process.env.STRIPE_SECRET_KEY);
-console.log("Secret Key starts with sk_:", process.env.STRIPE_SECRET_KEY?.startsWith('sk_'));
-console.log("Publishable Key configured:", !!process.env.STRIPE_PUBLISHable_KEY);
-console.log("Publishable Key starts with pk_:", process.env.STRIPE_PUBLISHABLE_KEY?.startsWith('pk_'));
-console.log("Environment:", process.env.NODE_ENV);
-console.log("Email User:", process.env.EMAIL_USER);
-console.log("Email Pass configured:", !!process.env.EMAIL_PASS);
-
-if (!process.env.STRIPE_SECRET_KEY?.startsWith('sk_')) {
-    console.error("CRITICAL ERROR: STRIPE_SECRET_KEY should start with 'sk_'");
-    console.error("Current value starts with:", process.env.STRIPE_SECRET_KEY?.substring(0, 10));
-}
-
-if (!process.env.STRIPE_PUBLISHABLE_KEY?.startsWith('pk_')) {
-    console.error("CRITICAL ERROR: STRIPE_PUBLISHABLE_KEY should start with 'pk_'");
-    console.error("Current value starts with:", process.env.STRIPE_PUBLISHABLE_KEY?.substring(0, 10));
-}
 
 mongoose.connect(MONGO_URL)
     .then(() => {
@@ -72,6 +45,19 @@ mongoose.connect(MONGO_URL)
         console.log(`Connected to database: ${mongoose.connection.name}`);
     })
     .catch(error => console.error("Database Connection Error:", error));
+
+const Register = require('./models/Register');
+const userSchema = new mongoose.Schema({
+    title: { type: String },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    country: { type: String, required: true },
+    termsAgreed: { type: Boolean, required: true, default: false },
+    newsletterAgreed: { type: Boolean, default: false },
+}, { timestamps: true });
+const User = mongoose.model('User', userSchema);
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -81,6 +67,7 @@ const transporter = nodemailer.createTransport({
         Receiver: process.env.EMAIL_RECEIVER
     },
 });
+console.log("Nodemailer transporter configured:", !!transporter);
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'bitcoine_browser_cart_secret_change_in_production',
@@ -101,19 +88,6 @@ app.use(session({
     name: 'bitcoine.browser.session'
 }));
 
-const userSchema = new mongoose.Schema({
-    title: { type: String }, 
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    country: { type: String, required: true },
-    termsAgreed: { type: Boolean, required: true, default: false },
-    newsletterAgreed: { type: Boolean, default: false },
-}, { timestamps: true });
-const User = mongoose.model('User', userSchema);
-
-
 app.use((req, res, next) => {
     req.browserInfo = {
         userAgent: req.headers['user-agent'] || '',
@@ -128,7 +102,7 @@ app.use((req, res, next) => {
         console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
         console.log('Session ID:', req.sessionID);
         console.log('Browser ID:', req.browserInfo.browserId);
-        console.log('User Agent:', req.browserInfo.userAgent.substring(0, 50) + '...');
+        console.log('User Agent:', req.browserInfo.userAgent.substring(0, Math.min(req.browserInfo.userAgent.length, 50)) + '...');
 
         if (req.path.includes('/cart')) {
             console.log('🛒Cart route accessed');
@@ -152,10 +126,69 @@ const verifyAuth = (req, res, next) => {
     }
 };
 
+const productRoutes = require('./routes/productRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+const contactRouter = require('./routes/contactRoutes');
+const checkoutRoutes = require('./routes/checkoutRoutes');
+const registerAuthRoutes = require('./routes/RegisterRoutes');
+
+app.get('/', (req, res) => res.send('Bitcoine API is running - LIVE Stripe Integration Active!'));
+
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        mongodb: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+        session: req.session ? 'Active' : 'Inactive',
+        sessionId: req.sessionID,
+        browserSupported: !!req.headers['user-agent'],
+        cartSystem: 'Browser-Specific (No Login Required)',
+        stripeConfigured: !!process.env.STRIPE_SECRET_KEY && !!process.env.STRIPE_PUBLISHABLE_KEY,
+        stripeMode: process.env.STRIPE_SECRET_KEY?.includes('_live_') ? 'LIVE' : 'TEST',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Browser Info route
+app.get('/api/browser-info', (req, res) => {
+    res.json({
+        browserId: req.headers['x-browser-id'] || 'not-provided',
+        sessionId: req.sessionID,
+        isNewSession: req.session.isNew,
+        userAgent: req.browserInfo.userAgent.substring(0, Math.min(req.browserInfo.userAgent.length, 100)),
+        platform: req.browserInfo.platform,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Stripe Configuration for Frontend
+app.get('/api/config/stripe', (req, res) => {
+    console.log("Frontend requesting Stripe config...");
+    console.log("Returning publishable key:", process.env.STRIPE_PUBLISHABLE_KEY?.substring(0, 20) + '...');
+    res.json({
+        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
+    });
+});
+
+// New Admin Login Route
+app.post('/api/admin/login', (req, res) => {
+    const { email, password } = req.body;
+    
+    // Validate against the .env credentials
+    if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+        req.session.isAuthenticated = true; // Set a session variable
+        res.status(200).json({ message: 'Login successful' });
+    } else {
+        res.status(401).json({ message: 'Invalid credentials' });
+    }
+});
+
+app.use('/api/auth', registerAuthRoutes);
+
+
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email })
         if (!user) {
             return res.status(400).json({ success: false, message: 'Invalid Credentials' });
         }
@@ -253,9 +286,10 @@ app.get('/api/auth/verify', (req, res) => {
     }
 });
 
-app.get('/api/users', verifyAuth, async (req, res) => {
+
+app.get('/api/users', async (req, res) => {
     try {
-        const users = await User.find().select('-password');
+        const users = await Register.find().select('-password');
         res.status(200).json(users);
     } catch (error) {
         console.error("Error fetching all users:", error);
@@ -266,24 +300,8 @@ app.get('/api/users', verifyAuth, async (req, res) => {
     }
 });
 
-// app.get('/api/users', verifyAuth, async (req, res) => {
-//     try {
-//         const users = await User.find().select('-password');
-//         res.status(200).json(users);
-//     } catch (error) {
-//         console.error("Error fetching all users:", error);
-//         res.status(500).json({
-//             message: 'Server error fetching user data.',
-//             error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong.'
-//         });
-//     }
-// });
 
-
-
-// --- END NEW Route ---
-
-// --- NEW: API Endpoint for Contact Information ---
+// API Endpoint for Contact Information
 app.get('/api/contact-info', (req, res) => {
     try {
         const contactDetails = {
@@ -308,46 +326,8 @@ app.get('/api/contact-info', (req, res) => {
         res.status(500).json({ message: "Failed to retrieve contact information." });
     }
 });
-// --- END NEW API Endpoint ---
 
-
-console.log("Nodemailer transporter configured:", !!transporter);
-
-app.get('/api/config/stripe', (req, res) => {
-    console.log("Frontend requesting Stripe config...");
-    console.log("Returning publishable key:", process.env.STRIPE_PUBLISHABLE_KEY?.substring(0, 20) + '...');
-    res.json({
-        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
-    });
-});
-
-app.get('/', (req, res) => res.send('Bitcoine API is running - LIVE Stripe Integration Active!'));
-
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        mongodb: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-        session: req.session ? 'Active' : 'Inactive',
-        sessionId: req.sessionID,
-        browserSupported: !!req.headers['user-agent'],
-        cartSystem: 'Browser-Specific (No Login Required)',
-        stripeConfigured: !!process.env.STRIPE_SECRET_KEY && !!process.env.STRIPE_PUBLISHABLE_KEY,
-        stripeMode: process.env.STRIPE_SECRET_KEY?.includes('_live_') ? 'LIVE' : 'TEST',
-        timestamp: new Date().toISOString()
-    });
-});
-
-app.get('/api/browser-info', (req, res) => {
-    res.json({
-        browserId: req.headers['x-browser-id'] || 'not-provided',
-        sessionId: req.sessionID,
-        isNewSession: req.session.isNew,
-        userAgent: req.browserInfo.userAgent.substring(0, 100),
-        platform: req.browserInfo.platform,
-        timestamp: new Date().toISOString()
-    });
-});
-
+// --- Stripe Payment Processing ---
 app.post("/api/payment", async (req, res) => {
     let { amount, id, browserId, customerInfo, items, note } = req.body;
 
@@ -412,23 +392,23 @@ app.post("/api/payment", async (req, res) => {
                     from: process.env.EMAIL_USER,
                     to: customerInfo.email,
                     cc: process.env.EMAIL_RECEIVER,
-                    subject: `Order Confirmation - Payment Successful #${payment.id.substring(-8)}`,
+                    subject: `Order Confirmation - Payment Successful #${payment.id.substring(payment.id.length - 8)}`,
                     html: `
                         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                             <h2 style="color: #4CAF50;">Thank you for your order!</h2>
                             <p>Dear ${customerInfo.firstName} ${customerInfo.lastName},</p>
                             <p>Your payment of <strong style="color: #2E7D32;">$${(amount / 100).toFixed(2)} USD</strong> has been processed successfully!</p>
-                            
+
                             <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
                                 <p><strong>Payment ID:</strong> ${payment.id}</p>
                                 <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()}</p>
                                 <p><strong>Payment Status:</strong> <span style="color: #4CAF50;">Confirmed</span></p>
                                 ${note ? `<p><strong>Order Note:</strong> ${note}</p>` : ''}
                             </div>
-                            
+
                             <p>We will process your order shortly and send you tracking information once shipped.</p>
                             <p>Thank you for shopping with Bitcoine Jewelry!</p>
-                            
+
                             <hr style="margin: 20px 0;">
                             <p style="font-size: 12px; color: #666;">
                                 This is a live transaction confirmation. Your card has been charged.
@@ -492,11 +472,6 @@ app.get('/api/products-protected', verifyAuth, (req, res) => {
     res.json({ message: 'This is a protected route. You are authenticated!' });
 });
 
-app.get('/api/config/stripe', (req, res) => {
-    res.status(200).json({
-        publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
-    });
-});
 
 app.use((err, req, res, next) => {
     console.error('Error:', err);
@@ -507,7 +482,6 @@ app.use((err, req, res, next) => {
     });
 });
 
-// 404 handler
 app.use((req, res) => {
     res.status(404).json({
         message: 'Route not found',
@@ -515,39 +489,14 @@ app.use((req, res) => {
     });
 });
 
-process.on('SIGTERM', async () => {
-    console.log('SIGTERM received. Shutting down gracefully...');
-    try {
-        await mongoose.connection.close();
-        console.log('MongoDB connection closed.');
-        process.exit(0);
-    } catch (error) {
-        console.error('Error closing MongoDB connection:', error);
-        process.exit(1);
-    }
-});
-
-process.on('SIGINT', async () => {
-    console.log('SIGINT received. Shutting down gracefully...');
-    try {
-        await mongoose.connection.close();
-        console.log('MongoDB connection closed.');
-        process.exit(0);
-    } catch (error) {
-        console.error('Error closing MongoDB connection:', error);
-        process.exit(1);
-    }
-});
-
-const PORT = process.env.PORT || 9000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`API Health Check: http://localhost:${PORT}/health`);
     console.log(`Browser-Specific Cart API: http://localhost:${PORT}/api/cart`);
     console.log(`Stripe Configuration: http://localhost:${PORT}/api/config/stripe`);
     console.log(`User Authentication API: http://localhost:${PORT}/api/auth/register`);
-    console.log(`Users List API: http://localhost:${PORT}/api/users (Protected)`); // New endpoint
-    console.log(`Contact Info API: http://localhost:${PORT}/api/contact-info`); // NEW endpoint
+    console.log(`Users List API: http://localhost:${PORT}/api/users (NOW PUBLIC)`);
+    console.log(`Contact Info API: http://localhost:${PORT}/api/contact-info`);
     console.log(`No login required for cart - Cart tied to browser/device`);
     console.log(`Hybrid storage: localStorage + MongoDB for persistence`);
 
@@ -565,10 +514,28 @@ app.listen(PORT, () => {
     }
 });
 
+// --- Graceful Shutdown ---
+const gracefulShutdown = async (signal) => {
+    console.log(`${signal} received. Shutting down gracefully...`);
+    try {
+        await mongoose.connection.close();
+        console.log('MongoDB connection closed.');
+        process.exit(0);
+    } catch (error) {
+        console.error('Error closing MongoDB connection:', error);
+        process.exit(1);
+    }
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// --- Scheduled Tasks ---
 const cleanupOldCarts = async () => {
     try {
+        const Cart = mongoose.models.Cart || mongoose.model('Cart', new mongoose.Schema({ /* ... cart schema ... */ }));
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        const result = await mongoose.model('Cart').deleteMany({
+        const result = await Cart.deleteMany({
             lastActivity: { $lt: thirtyDaysAgo }
         });
         console.log(`Cleaned up ${result.deletedCount} old carts`);
@@ -577,4 +544,5 @@ const cleanupOldCarts = async () => {
     }
 };
 
+// Run cleanup every 24 hours
 setInterval(cleanupOldCarts, 24 * 60 * 60 * 1000);

@@ -1,230 +1,148 @@
+// Admin.js
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Download, Filter, MoreHorizontal, Star, Calendar, RefreshCw } from 'lucide-react';
 import './Admin.css';
 
-const Admin = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [loginData, setLoginData] = useState({
-        email: '',
-        password: ''
-    });
-    const [loginError, setLoginError] = useState('');
-    const [isLoggingIn, setIsLoggingIn] = useState(false);
-    const [activeCategory, setActiveCategory] = useState('dashboard');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedFilter, setSelectedFilter] = useState('All');
-    const [selectedCategory, setSelectedCategory] = useState('All');
-    const [selectedType, setSelectedType] = useState('All');
+// UserData Component (no changes needed)
+const UserData = () => {
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Mock data for products
-    const [products] = useState([
-        {
-            id: 1,
-            title: "OnePlus Nord N30 5G | Unlocked Dual SIM Android Smart Phone | 6.7\" LCD",
-            sku: "HYS480",
-            stock: "In Stock",
-            stockCount: 25,
-            price: "$250",
-            categories: ["Electronics"],
-            type: "Goods",
-            tags: ["Top rated", "Best", "Popular", "Phone"],
-            rate: 4.2,
-            date: "03/12/2023",
-            lastEdited: "Last Edited"
-        },
-        {
-            id: 2,
-            title: "Socket Mobile Charging Dock",
-            sku: "ES480",
-            stock: "In Stock",
-            stockCount: 25,
-            price: "$50.50",
-            categories: ["Electronics"],
-            type: "Goods",
-            tags: ["Top rated", "Best", "Popular", "Phone"],
-            rate: 4.2,
-            date: "03/12/2023",
-            lastEdited: "Last Edited"
-        },
-        {
-            id: 3,
-            title: "Mielle Organics Rosemary Mint Scalp & Hair Strengthening Oil With Biotin & Essential Oils",
-            sku: "XZ25",
-            stock: "Stock Out",
-            stockCount: 0,
-            price: "$9.20",
-            categories: ["Beauty"],
-            type: "Goods",
-            tags: ["Top rated", "Best", "Popular", "Phone"],
-            rate: 4.2,
-            date: "03/12/2023",
-            lastEdited: "Last Edited"
-        },
-        {
-            id: 4,
-            title: "Bath & Body Works eGift",
-            sku: "0024Y",
-            stock: "In Stock",
-            stockCount: 25,
-            price: "$25",
-            categories: ["Finance"],
-            type: "Goods",
-            tags: ["Top rated", "Best", "Popular", "Phone"],
-            rate: 4.2,
-            date: "03/12/2023",
-            lastEdited: "Last Edited"
-        },
-        {
-            id: 5,
-            title: "Essentials Men's Quarter-Zip Polar Fleece Jacket",
-            sku: "HYS480",
-            stock: "In Stock",
-            stockCount: 25,
-            price: "$15.80",
-            categories: ["Fashion"],
-            type: "Goods",
-            tags: ["Top rated", "Best", "Popular", "Phone"],
-            rate: 4.2,
-            date: "03/12/2023",
-            lastEdited: "Last Edited"
-        },
-        {
-            id: 6,
-            title: "Essentials Men's Quarter-Zip Polar Fleece Jacket",
-            sku: "HYS480",
-            stock: "Stock Low",
-            stockCount: 5,
-            price: "$15.80",
-            categories: ["Fashion"],
-            type: "Goods",
-            tags: ["Top rated", "Best", "Popular", "Phone"],
-            rate: 4.2,
-            date: "03/12/2023",
-            lastEdited: "Last Edited"
-        },
-        {
-            id: 7,
-            title: "Furniws Turn-N-Tube 5 Tier Corner Display Rack Multipurpose Shelving Unit, 1-Pack, Dark Walnut",
-            sku: "154X",
-            stock: "In Stock",
-            stockCount: 25,
-            price: "$25",
-            categories: ["Kitchen"],
-            type: "Goods",
-            tags: ["Top rated", "Best", "Popular", "Phone"],
-            rate: 4.2,
-            date: "03/12/2023",
-            lastEdited: "Last Edited"
-        }
-    ]);
+    useEffect(() => {
+        const fetchUsers = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await fetch('http://localhost:9000/api/users', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
 
-    const handleLogin = async () => {
-        setIsLoggingIn(true);
-        setLoginError('');
+                if (response.status === 401) {
+                    throw new Error('You are not authorized. Please log in.');
+                }
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to fetch user data.');
+                }
 
-        // Simulate API call
-        setTimeout(() => {
-            if (loginData.email === 'admin@admin.com' && loginData.password === 'admin') {
-                setIsAuthenticated(true);
-                setLoginData({ email: '', password: '' });
-                setActiveCategory('products');
-            } else {
-                setLoginError('Invalid credentials. Use admin@admin.com / admin');
+                const data = await response.json();
+
+                const usersWithDate = data.map(user => ({
+                    ...user,
+                    registrationDate: new Date(user.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'short', day: 'numeric'
+                    }),
+                    registrationTime: new Date(user.createdAt).toLocaleTimeString('en-US', {
+                        hour: '2-digit', minute: '2-digit'
+                    })
+                }));
+
+                setUsers(usersWithDate);
+            } catch (err) {
+                console.error('Fetch Error:', err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
             }
-            setIsLoggingIn(false);
-        }, 1000);
-    };
+        };
 
-    const handleLogout = () => {
-        setIsAuthenticated(false);
-        setActiveCategory('dashboard');
-    };
+        fetchUsers();
+    }, []);
 
-    const handleLoginInputChange = (e) => {
-        const { name, value } = e.target;
-        setLoginData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+    if (loading) {
+        return (
+            <div className="content-section">
+                <div className="loading-container">
+                    <div className="spinner"></div>
+                    <p className="loading-text">Loading user data...</p>
+                </div>
+            </div>
+        );
+    }
 
-    const getStockColor = (stock) => {
-        switch (stock) {
-            case 'In Stock': return 'stock-in-stock';
-            case 'Stock Out': return 'stock-out';
-            case 'Stock Low': return 'stock-low';
-            default: return 'stock-default';
-        }
-    };
+    if (error) {
+        return (
+            <div className="content-section">
+                <div className="error-container">
+                    <div className="error-icon">⚠️</div>
+                    <h3 className="error-title">Error Loading Users</h3>
+                    <p className="error-text">{error}</p>
+                    <p className="error-subtext">Please ensure you are logged in and have the necessary permissions.</p>
+                </div>
+            </div>
+        );
+    }
 
-    const ProductManagement = () => (
-        <div className="product-management">
-            <div className="product-stats">
-                <div className="stats-item">
-                    <span>Products: <span className="stats-number">All (1254)</span></span>
+    if (users.length === 0) {
+        return (
+            <div className="content-section">
+                <div className="no-data-container">
+                    <div className="no-data-icon">👥</div>
+                    <h3 className="no-data-title">No Users Found</h3>
+                    <p className="no-data-text">No registered users found in the system.</p>
+                    <p className="no-data-subtext">Start by registering some users through the registration endpoint.</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="content-section">
+            <div className="section-header">
+                <h1 className="section-title">User Management</h1>
+                <div className="section-stats">
+                    <div className="stats-item">
+                        <span className="stats-number">{users.length}</span>
+                        <span className="stats-label">Total Users</span>
+                    </div>
                 </div>
             </div>
 
             <div className="table-container">
-                <table className="products-table">
+                <table className="data-table">
                     <thead>
                         <tr>
-                            <th>PRODUCT TITLE</th>
-                            <th>SKU</th>
-                            <th>STOCK</th>
-                            <th>PRICE</th>
-                            <th>CATEGORIES</th>
-                            <th>TYPE</th>
-                            <th>TAGS</th>
-                            <th>RATE</th>
-                            <th>DATE</th>
-                            <th>ACTIONS</th>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Email</th>
+                            <th>Country</th>
+                            <th>Registration Date</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {products.map((product) => (
-                            <tr key={product.id} className="table-row">
-                                <td className="product-title">
-                                    <div className="title-text">{product.title}</div>
+                        {users.map((user, index) => (
+                            <tr key={user._id} className="table-row">
+                                <td data-label="ID">
+                                    <span className="id-badge">{index + 1}</span>
                                 </td>
-                                <td className="product-sku">{product.sku}</td>
-                                <td>
-                                    <span className={`stock-badge ${getStockColor(product.stock)}`}>
-                                        {product.stock} ({product.stockCount})
-                                    </span>
+                                <td data-label="Title">
+                                    <span className="title-text">{user.title || 'N/A'}</span>
                                 </td>
-                                <td className="product-price">{product.price}</td>
-                                <td>
-                                    <span className="category-link">
-                                        {product.categories.join(', ')}
-                                    </span>
+                                <td data-label="First Name">
+                                    <span className="name-text">{user.firstName}</span>
                                 </td>
-                                <td className="product-type">{product.type}</td>
-                                <td>
-                                    <div className="tags-container">
-                                        {product.tags.slice(0, 3).map((tag, index) => (
-                                            <span key={index} className="tag-link">
-                                                {tag}{index < Math.min(product.tags.length, 3) - 1 ? ', ' : ''}
-                                            </span>
-                                        ))}
-                                    </div>
+                                <td data-label="Last Name">
+                                    <span className="name-text">{user.lastName}</span>
                                 </td>
-                                <td>
-                                    <div className="rating-container">
-                                        <Star className="rating-star" />
-                                        <span className="rating-number">{product.rate}</span>
-                                    </div>
+                                <td data-label="Email">
+                                    <a href={`mailto:${user.email}`} className="email-link">
+                                        {user.email}
+                                    </a>
                                 </td>
-                                <td>
+                                <td data-label="Country">
+                                    <span className="country-text">{user.country}</span>
+                                </td>
+                                <td data-label="Registration Date">
                                     <div className="date-container">
-                                        <p className="date-main">{product.date}</p>
-                                        <p className="date-sub">{product.lastEdited}</p>
+                                        <div className="date-main">{user.registrationDate}</div>
+                                        <div className="date-sub">{user.registrationTime}</div>
                                     </div>
-                                </td>
-                                <td>
-                                    <button className="action-button">
-                                        <MoreHorizontal className="action-icon" />
-                                    </button>
                                 </td>
                             </tr>
                         ))}
@@ -233,227 +151,448 @@ const Admin = () => {
             </div>
         </div>
     );
+};
 
-    // Other management components
-    const UserManagement = () => (
-        <div className="content-section">
-            <h2 className="section-title">Users Management</h2>
-            <p className="section-text">User management content goes here.</p>
-        </div>
-    );
+// ContactData Component (no changes needed)
+const ContactData = () => {
+    const [contacts, setContacts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const OrderManagement = () => (
-        <div className="content-section">
-            <h2 className="section-title">Order Management</h2>
-            <p className="section-text">Order management content goes here.</p>
-        </div>
-    );
+    useEffect(() => {
+        const fetchContacts = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await fetch('http://localhost:9000/api/contact', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
 
-    const ContactManagement = () => (
-        <div className="content-section">
-            <h2 className="section-title">Contact Management</h2>
-            <p className="section-text">Contact management content goes here.</p>
-        </div>
-    );
+                if (response.status === 401) {
+                    throw new Error('You are not authorized. Please log in to view contact submissions.');
+                }
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to fetch contact data.');
+                }
 
-    const PaymentManagement = () => (
-        <div className="content-section">
-            <h2 className="section-title">Payment Management</h2>
-            <p className="section-text">Payment management content goes here.</p>
-        </div>
-    );
+                const data = await response.json();
 
-    const Statistics = () => (
-        <div className="content-section">
-            <h2 className="section-title">Statistics</h2>
-            <p className="section-text">Statistics content goes here.</p>
-        </div>
-    );
+                const contactsWithFormattedDates = data.map(contact => ({
+                    ...contact,
+                    submissionDate: contact.createdAt ? new Date(contact.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'short', day: 'numeric'
+                    }) : 'N/A',
+                    submissionTime: contact.createdAt ? new Date(contact.createdAt).toLocaleTimeString('en-US', {
+                        hour: '2-digit', minute: '2-digit'
+                    }) : 'N/A'
+                }));
 
-    const Reviews = () => (
-        <div className="content-section">
-            <h2 className="section-title">Reviews</h2>
-            <p className="section-text">Reviews content goes here.</p>
-        </div>
-    );
+                setContacts(contactsWithFormattedDates);
+            } catch (err) {
+                console.error('Fetch Error:', err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const DefaultDashboard = () => (
-        <div className="content-section">
-            <h2 className="section-title">Dashboard Overview</h2>
-            <p className="section-text">Welcome to the admin dashboard. Select a category from the sidebar to begin.</p>
-        </div>
-    );
+        fetchContacts();
+    }, []);
 
-    const renderContent = () => {
-        switch (activeCategory) {
-            case 'dashboard':
-                return <DefaultDashboard />;
-            case 'products':
-                return <ProductManagement />;
-            case 'orders':
-                return <OrderManagement />;
-            case 'statistics':
-                return <Statistics />;
-            case 'reviews':
-                return <Reviews />;
-            case 'customers':
-                return <UserManagement />;
-            case 'transactions':
-                return <PaymentManagement />;
-            case 'settings':
-                return <ContactManagement />;
-            default:
-                return <DefaultDashboard />;
-        }
-    };
-
-    if (!isAuthenticated) {
+    if (loading) {
         return (
-            <div className="login-container">
-                <div className="login-card">
-                    <div className="login-header">
-                        <h1 className="login-title">Admin Panel Login</h1>
-                        <p className="login-subtitle">Use: admin@admin.com / admin</p>
-                    </div>
-                    <div className="login-form">
-                        {loginError && (
-                            <div className="login-error">
-                                {loginError}
-                            </div>
-                        )}
-                        <div className="form-group">
-                            <label htmlFor="email" className="form-label">
-                                Email Address
-                            </label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                value={loginData.email}
-                                onChange={handleLoginInputChange}
-                                required
-                                placeholder="Enter your email"
-                                className="form-input"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="password" className="form-label">
-                                Password
-                            </label>
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                value={loginData.password}
-                                onChange={handleLoginInputChange}
-                                required
-                                placeholder="Enter your password"
-                                className="form-input"
-                            />
-                        </div>
-                        <button
-                            onClick={handleLogin}
-                            className={`login-btn ${isLoggingIn ? 'loading' : ''}`}
-                            disabled={isLoggingIn}
-                        >
-                            {isLoggingIn ? 'Logging in...' : 'Login'}
-                        </button>
-                    </div>
+            <div className="content-section">
+                <div className="loading-container">
+                    <div className="spinner"></div>
+                    <p className="loading-text">Loading contact data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="content-section">
+                <div className="error-container">
+                    <div className="error-icon">⚠️</div>
+                    <h3 className="error-title">Error Loading Contacts</h3>
+                    <p className="error-text">{error}</p>
+                    <p className="error-subtext">Please ensure you are logged in and have the necessary permissions.</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (contacts.length === 0) {
+        return (
+            <div className="content-section">
+                <div className="no-data-container">
+                    <div className="no-data-icon">📧</div>
+                    <h3 className="no-data-title">No Contact Submissions</h3>
+                    <p className="no-data-text">No contact submissions found in the system.</p>
+                    <p className="no-data-subtext">Users can submit contacts through your contact form.</p>
                 </div>
             </div>
         );
     }
 
     return (
+        <div className="content-section">
+            <div className="section-header">
+                <h1 className="section-title">Contact Management</h1>
+                <div className="section-stats">
+                    <div className="stats-item">
+                        <span className="stats-number">{contacts.length}</span>
+                        <span className="stats-label">Total Submissions</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="table-container">
+                <table className="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Country</th>
+                            <th>Subject</th>
+                            <th>Message</th>
+                            <th>Submission Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {contacts.map((contact, index) => (
+                            <tr key={contact._id || index} className="table-row">
+                                <td data-label="#">
+                                    <span className="id-badge">{index + 1}</span>
+                                </td>
+                                <td data-label="Name">
+                                    <div className="name-container">
+                                        <span className="name-text">
+                                            {contact.firstName || 'N/A'} {contact.lastName || ''}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td data-label="Email">
+                                    <a href={`mailto:${contact.email}`} className="email-link">
+                                        {contact.email || 'N/A'}
+                                    </a>
+                                </td>
+                                <td data-label="Phone">
+                                    <span className="phone-text">{contact.phone || 'N/A'}</span>
+                                </td>
+                                <td data-label="Country">
+                                    <span className="country-text">{contact.country || 'N/A'}</span>
+                                </td>
+                                <td data-label="Subject">
+                                    <span className="subject-text">{contact.subject || 'N/A'}</span>
+                                </td>
+                                <td data-label="Message">
+                                    <div className="message-container">
+                                        <span className="message-text">
+                                            {contact.message ?
+                                                (contact.message.length > 100
+                                                    ? contact.message.substring(0, 100) + '...'
+                                                    : contact.message
+                                                )
+                                                : 'N/A'
+                                            }
+                                        </span>
+                                    </div>
+                                </td>
+                                <td data-label="Submission Date">
+                                    <div className="date-container">
+                                        <div className="date-main">{contact.submissionDate}</div>
+                                        <div className="date-sub">{contact.submissionTime}</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+// Dashboard Component (no changes needed)
+const Dashboard = () => {
+    return (
+        <div className="content-section">
+            <div className="dashboard-container">
+                <h1 className="section-title">Dashboard</h1>
+                <div className="dashboard-cards">
+
+                    <div className="dashboard-card">
+                        <div className="card-icon">📧</div>
+                        <div className="card-content">
+                            <h3 className="card-title">Dashboard Management</h3>
+                            <p className="card-description">View and manage contact submissions</p>
+                        </div>
+                    </div>
+
+                    <div className="dashboard-card">
+                        <div className="card-icon">👥</div>
+                        <div className="card-content">
+                            <h3 className="card-title">User Management</h3>
+                            <p className="card-description">View and manage registered users</p>
+                        </div>
+                    </div>
+
+                    <div className="dashboard-card">
+                        <div className="card-icon">📧</div>
+                        <div className="card-content">
+                            <h3 className="card-title">Contact Management</h3>
+                            <p className="card-description">View and manage contact submissions</p>
+                        </div>
+                    </div>
+
+                    <div className="dashboard-card">
+                        <div className="card-icon">📧</div>
+                        <div className="card-content">
+                            <h3 className="card-title">Product Management</h3>
+                            <p className="card-description">View and manage contact submissions</p>
+                        </div>
+                    </div>
+
+                    <div className="dashboard-card">
+                        <div className="card-icon">📧</div>
+                        <div className="card-content">
+                            <h3 className="card-title">Orders Management</h3>
+                            <p className="card-description">View and manage contact submissions</p>
+                        </div>
+                    </div>
+
+                    <div className="dashboard-card">
+                        <div className="card-icon">📧</div>
+                        <div className="card-content">
+                            <h3 className="card-title">Contact Management</h3>
+                            <p className="card-description">View and manage contact submissions</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+// Login Form Component
+const LoginForm = ({ onLogin }) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch('http://localhost:9000/api/admin/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Login failed. Please check your credentials.');
+            }
+
+            // Login successful
+            onLogin();
+
+        } catch (err) {
+            console.error('Login Error:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="Admin-login-container">
+            <div className="login-card">
+                <h2 className="login-title">Admin Login</h2>
+                <form onSubmit={handleSubmit} className="login-form">
+                    <div className="form-group">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="password">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    {error && <p className="error-message">{error}</p>}
+                    <button type="submit" className="login-button" disabled={loading}>
+                        {loading ? 'Logging in...' : 'Login'}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+// Main Admin Panel Component
+const Admin = () => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [activeView, setActiveView] = useState('dashboard');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const response = await fetch('http://localhost:9000/api/admin/check-auth', {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                if (response.ok) {
+                    setIsAuthenticated(true);
+                } else {
+                    setIsAuthenticated(false);
+                }
+            } catch (err) {
+                console.error('Auth check failed:', err);
+                setIsAuthenticated(false);
+            }
+        };
+        checkAuth();
+    }, []);
+
+    const handleNavClick = (view) => {
+        setActiveView(view);
+        setIsSidebarOpen(false);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await fetch('http://localhost:9000/api/admin/logout', {
+                method: 'POST',
+                credentials: 'include',
+            });
+            setIsAuthenticated(false);
+            setActiveView('dashboard');
+        } catch (err) {
+            console.error('Logout failed:', err);
+        }
+    };
+
+    if (!isAuthenticated) {
+        return <LoginForm onLogin={() => setIsAuthenticated(true)} />;
+    }
+
+    const renderContent = () => {
+        switch (activeView) {
+            case 'users':
+                return <UserData />;
+            case 'contacts':
+                return <ContactData />;
+            default:
+                return <Dashboard />;
+        }
+    };
+
+    return (
         <div className="admin-container">
             {/* Sidebar */}
-            <div className="sidebar">
+            <aside className={`sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
                 <div className="sidebar-header">
-
+                    <div className="logo-container">
+                        <div className="logo-icon">
+                            <span className="logo-star">★</span>
+                        </div>
+                        <span className="logo-text">Admin Panel</span>
+                    </div>
                 </div>
 
                 <nav className="sidebar-nav">
                     <ul className="nav-list">
                         <li>
                             <button
-                                onClick={() => setActiveCategory('dashboard')}
-                                className={`nav-button ${activeCategory === 'dashboard' ? 'active' : ''}`}
+                                className={`nav-button ${activeView === 'dashboard' ? 'active' : ''}`}
+                                onClick={() => handleNavClick('dashboard')}
                             >
-                                <span className="nav-icon">📊</span>
-                                <span>Dashboard</span>
+                                <span className="nav-text">Dashboard</span>
                             </button>
                         </li>
                         <li>
                             <button
-                                onClick={() => setActiveCategory('products')}
-                                className={`nav-button ${activeCategory === 'products' ? 'active' : ''}`}
+                                className={`nav-button ${activeView === 'users' ? 'active' : ''}`}
+                                onClick={() => handleNavClick('users')}
                             >
-                                <span className="nav-icon">📦</span>
-                                <span>Products</span>
+                                <span className="nav-text">Users</span>
                             </button>
                         </li>
                         <li>
                             <button
-                                onClick={() => setActiveCategory('orders')}
-                                className={`nav-button ${activeCategory === 'orders' ? 'active' : ''}`}
+                                className={`nav-button ${activeView === 'contacts' ? 'active' : ''}`}
+                                onClick={() => handleNavClick('contacts')}
                             >
-                                <span className="nav-icon">🛒</span>
-                                <span>Orders</span>
+                                <span className="nav-text">Contacts</span>
                             </button>
                         </li>
                         <li>
                             <button
-                                onClick={() => setActiveCategory('statistics')}
-                                className={`nav-button ${activeCategory === 'statistics' ? 'active' : ''}`}
+                                className={`nav-button ${activeView === 'contacts' ? 'active' : ''}`}
+                                onClick={() => handleNavClick('contacts')}
                             >
-                                <span className="nav-icon">📈</span>
-                                <span>Contact</span>
+                                <span className="nav-text">Product</span>
                             </button>
                         </li>
                         <li>
                             <button
-                                onClick={() => setActiveCategory('reviews')}
-                                className={`nav-button ${activeCategory === 'reviews' ? 'active' : ''}`}
+                                className={`nav-button ${activeView === 'contacts' ? 'active' : ''}`}
+                                onClick={() => handleNavClick('contacts')}
                             >
-                                <span className="nav-icon">⭐</span>
-                                <span>User</span>
+                                <span className="nav-text">Orders</span>
                             </button>
                         </li>
-                        <li>
-                            <button
-                                onClick={() => setActiveCategory('settings')}
-                                className={`nav-button ${activeCategory === 'settings' ? 'active' : ''}`}
-                            >
-                                <span className="nav-icon">⚙️</span>
-                                <span>Settings</span>
-                            </button>
-                        </li>
-                        <li>
-                            <button
-                                onClick={() => setActiveCategory('profile')}
-                                className={`nav-button ${activeCategory === 'profile' ? 'active' : ''}`}
-                            >
-                                <span className="nav-icon">👤</span>
-                                <span>Profile</span>
-                            </button>
-                        </li>
+
+                        <button onClick={handleLogout} className="logout-button">
+                            <span className="logout-text">Logout</span>
+                        </button>
                     </ul>
                 </nav>
-            </div>
+            </aside>
 
             {/* Main Content */}
-            <div className="main-content">
-                {/* Header */}
-                <header className="main-header">
-
-
-                </header>
-
-                {/* Content */}
-                <main className="content-area">
+            <main className="main-content">
+                <div className="content-area">
                     {renderContent()}
-                </main>
-            </div>
+                </div>
+            </main>
+
+            {/* Mobile Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="sidebar-overlay"
+                    onClick={() => setIsSidebarOpen(false)}
+                ></div>
+            )}
         </div>
     );
 };
