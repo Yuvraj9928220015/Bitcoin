@@ -153,7 +153,6 @@ const UserData = () => {
     );
 };
 
-// ContactData Component (no changes needed)
 const ContactData = () => {
     const [contacts, setContacts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -322,7 +321,6 @@ const ContactData = () => {
     );
 };
 
-// New ProductData Component to wrap ProductList
 const ProductData = () => {
     return (
         <div className="content-section">
@@ -332,7 +330,6 @@ const ProductData = () => {
 };
 
 
-// Dashboard Component (no changes needed for now, but you might want to link cards to sections)
 const Dashboard = () => {
     return (
         <div className="content-section">
@@ -521,9 +518,15 @@ const Admin = () => {
                 return <UserData />;
             case 'contacts':
                 return <ContactData />;
-            case 'products': // New case for Products
+            case 'products':
                 return <ProductData />;
-            // You can add cases for 'orders' here too
+            case 'orders':
+                return (
+                    <div className="content-section">
+                        <h1 className="section-title">Orders Management</h1>
+                        <p>Orders data will be displayed here.</p>
+                    </div>
+                );
             default:
                 return <Dashboard />;
         }
@@ -570,16 +573,16 @@ const Admin = () => {
                         </li>
                         <li>
                             <button
-                                className={`nav-button ${activeView === 'products' ? 'active' : ''}`} // Updated for Products
-                                onClick={() => handleNavClick('products')} // Link to products view
+                                className={`nav-button ${activeView === 'products' ? 'active' : ''}`}
+                                onClick={() => handleNavClick('products')}
                             >
                                 <span className="nav-text">Product</span>
                             </button>
                         </li>
                         <li>
                             <button
-                                className={`nav-button ${activeView === 'orders' ? 'active' : ''}`} // New for Orders
-                                onClick={() => handleNavClick('orders')} // Link to orders view
+                                className={`nav-button ${activeView === 'orders' ? 'active' : ''}`}
+                                onClick={() => handleNavClick('orders')}
                             >
                                 <span className="nav-text">Orders</span>
                             </button>
@@ -599,7 +602,6 @@ const Admin = () => {
                 </div>
             </main>
 
-            {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div
                     className="sidebar-overlay"

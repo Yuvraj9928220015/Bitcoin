@@ -603,7 +603,7 @@
 
 @media (max-width: 480px) {
     .Contact {
-        padding: 40px 0px;
+        padding: 80px 0px;
     }
 
     .contact-us-info-title,
@@ -682,12 +682,10 @@
     }
 }
 
-/* Additional styling for better UX */
 .contact-form-section .container {
     position: relative;
 }
 
-/* Form validation styles */
 .form-group input:invalid,
 .form-group select:invalid,
 .form-group textarea:invalid {
@@ -700,7 +698,6 @@
     border-color: #27ae60;
 }
 
-/* Loading state for submit button */
 .submit-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -715,7 +712,6 @@
     box-shadow: none;
 }
 
-/* Focus styles for accessibility */
 .back-btn:focus,
 .cancel-btn:focus,
 .submit-btn:focus {
@@ -723,13 +719,11 @@
     outline-offset: 2px;
 }
 
-/* Smooth transitions */
 .contact-us-info,
 .contact-form-section {
     transition: all 0.3s ease-in-out;
 }
 
-/* Enhanced hover effects */
 .Contact-Box {
     background: white;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);

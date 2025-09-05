@@ -15,7 +15,7 @@ import { CiLock } from "react-icons/ci";
 import { useCart } from '../../context/CartContext';
 import './CheckoutPage.css';
 
-const API_URL = 'http://localhost:9000'; // Ensure this matches your backend URL
+const API_URL = 'http://localhost:9000';
 
 const CARD_ELEMENT_OPTIONS = {
     style: {
@@ -27,7 +27,7 @@ const CARD_ELEMENT_OPTIONS = {
             "::placeholder": {
                 color: "#aab7c4",
             },
-            padding: "10px 12px", // Added padding for better appearance
+            padding: "10px 12px",
         },
         invalid: {
             color: "#fa755a",
@@ -89,9 +89,8 @@ const CheckoutPage = () => {
         loadStripeConfig();
     }, []);
 
-    // Calculate total, shipping, tax and final total
-    const shippingCost = cartItems.length > 0 ? 15.00 : 0; // Example static shipping
-    const taxRate = 0.08; // 8% tax rate
+    const shippingCost = cartItems.length > 0 ? 15.00 : 0;
+    const taxRate = 0.08;
     const calculatedTax = (subtotal + shippingCost) * taxRate;
 
     let total = subtotal + shippingCost + calculatedTax;
@@ -121,7 +120,7 @@ const CheckoutPage = () => {
         e.preventDefault();
         const code = couponCode.toLowerCase();
         let discountAmount = 0;
-        let discountType = 'fixed'; // 'fixed' or 'percentage'
+        let discountType = 'fixed';
 
         if (code === 'save10') {
             discountAmount = subtotal * 0.1;
@@ -141,7 +140,7 @@ const CheckoutPage = () => {
         } else {
             alert('❌ Invalid coupon code. Try: SAVE10, FREE15, or WELCOME20');
             setCouponCode('');
-            setAppliedCoupon(null); // Clear any previously applied coupon
+            setAppliedCoupon(null);
             return;
         }
         console.log("Coupon applied:", couponCode);
@@ -154,14 +153,12 @@ const CheckoutPage = () => {
         e.preventDefault();
         console.log("Calculating shipping for:", shippingInfo);
 
-        let calculatedShipping = 15.00; // Default
+        let calculatedShipping = 15.00;
         if (shippingInfo.state === 'California') {
             calculatedShipping = 10.00;
         } else if (shippingInfo.country === 'Canada') {
             calculatedShipping = 25.00;
         }
-        // In a real app, you'd likely update a state variable for shippingCost here
-        // For this example, we'll just show an alert
         alert(`Shipping calculated: $${calculatedShipping.toFixed(2)} for ${shippingInfo.city}, ${shippingInfo.state}`);
         closeModal();
     };
@@ -230,7 +227,7 @@ const CheckoutPage = () => {
                         city: formData.city,
                         state: formData.state,
                         postal_code: formData.zip,
-                        country: 'US', // Assuming US based on form
+                        country: 'US',
                     }
                 }
             });
@@ -251,22 +248,21 @@ const CheckoutPage = () => {
                 sessionStorage.getItem('browserId') ||
                 `browser_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-            // Send all relevant data to your custom backend API
             const response = await axios.post(`${API_URL}/api/payment`, {
-                amount: amountInCents, // Total amount in cents
-                id: paymentMethod.id, // Stripe PaymentMethod ID
+                amount: amountInCents,
+                id: paymentMethod.id,
                 browserId: browserId,
-                items: cartItems.map(item => ({ // Map cart items to match your Order model schema
-                    productId: item.id || item.cartId, // Use a unique product identifier
+                items: cartItems.map(item => ({
+                    productId: item.id || item.cartId,
                     name: item.name,
                     image: item.image,
                     price: item.price,
                     quantity: item.quantity,
                     size: item.size
                 })),
-                customerInfo: formData, // All billing details
-                note: note, // Any customer notes
-                appliedCoupon: appliedCoupon // Coupon details if applied
+                customerInfo: formData,
+                note: note,
+                appliedCoupon: appliedCoupon
             });
 
             if (response.data.success) {
@@ -295,7 +291,6 @@ Thank you for your purchase! You can check your payment in the Stripe dashboard.
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
             } else if (response.data.requiresAction && response.data.clientSecret) {
-                // Handle 3D Secure or other actions required by Stripe
                 console.log('⚠️ Payment requires action (e.g., 3D Secure). Confirming card payment...');
                 const { paymentIntent, error: confirmError } = await stripe.confirmCardPayment(response.data.clientSecret);
 
@@ -306,16 +301,13 @@ Thank you for your purchase! You can check your payment in the Stripe dashboard.
                 } else if (paymentIntent.status === 'succeeded') {
                     console.log('✅ Payment succeeded after authentication!', paymentIntent);
                     alert('Payment successful after authentication!');
-                    // You might need to make another API call to your backend to finalize the order
-                    // or the backend might handle this via webhooks. For simplicity, we'll
-                    // assume the initial success response handles it.
                     setPaymentStatus({
                         status: 'success',
                         message: 'Payment successful after authentication!',
                         paymentId: paymentIntent.id,
                         amount: paymentIntent.amount,
                         customerEmail: formData.email,
-                        orderId: response.data.orderId // Assuming orderId might come from initial response
+                        orderId: response.data.orderId
                     });
                     clearCart();
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -398,7 +390,6 @@ Thank you for your purchase! You can check your payment in the Stripe dashboard.
     return (
         <>
             <div className="checkout-container">
-                {/* Show Stripe config status */}
                 {!stripeConfig && (
                     <div style={{
                         background: '#fff3cd',

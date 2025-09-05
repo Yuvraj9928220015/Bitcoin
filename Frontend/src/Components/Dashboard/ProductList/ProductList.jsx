@@ -16,13 +16,7 @@ const initialProductState = {
 };
 
 export default function ProductList() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [loginData, setLoginData] = useState({
-        email: '',
-        password: ''
-    });
-    const [loginError, setLoginError] = useState('');
-    const [isLoggingIn, setIsLoggingIn] = useState(false);
+    // Authentication states removed
 
     const [products, setProducts] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
@@ -36,84 +30,18 @@ export default function ProductList() {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        checkAuthStatus();
+        // Directly fetch products on component mount, no authentication check needed
+        fetchProducts();
     }, []);
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            fetchProducts();
-        }
-    }, [isAuthenticated]);
-
-    const checkAuthStatus = async () => {
-        try {
-            const response = await axios.get(`${API_URL}/api/auth/verify`, {
-                withCredentials: true
-            });
-            if (response.data.authenticated) {
-                setIsAuthenticated(true);
-            }
-        } catch (error) {
-            console.log("Not authenticated or error verifying auth:", error);
-            setIsAuthenticated(false);
-        }
-    };
-
-    // Handles user login
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        setIsLoggingIn(true);
-        setLoginError('');
-
-        try {
-            const response = await axios.post(`${API_URL}/api/auth/login`, loginData, {
-                withCredentials: true
-            });
-
-            if (response.data.success) {
-                setIsAuthenticated(true);
-                setLoginData({ email: '', password: '' });
-            }
-        } catch (error) {
-            setLoginError(error.response?.data?.message || 'Login failed. Please try again.');
-        } finally {
-            setIsLoggingIn(false);
-        }
-    };
-
-    // Handles user logout
-    const handleLogout = async () => {
-        try {
-            await axios.post(`${API_URL}/api/auth/logout`, {}, {
-                withCredentials: true
-            });
-            setIsAuthenticated(false);
-            setProducts([]);
-        } catch (error) {
-            console.error("Logout error:", error);
-        }
-    };
-
-    const handleLoginInputChange = (e) => {
-        const { name, value } = e.target;
-        setLoginData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
 
     // Fetches products from the backend
     const fetchProducts = async () => {
         try {
-            const response = await axios.get(`${API_URL}/api/products`, {
-                withCredentials: true
-            });
+            const response = await axios.get(`${API_URL}/api/products`); // Removed withCredentials
             setProducts(response.data);
         } catch (error) {
             console.error("Error fetching products:", error);
-            if (error.response?.status === 401) {
-                setIsAuthenticated(false);
-            }
+            // Removed setIsAuthenticated(false)
         }
     };
 
@@ -221,15 +149,13 @@ export default function ProductList() {
         try {
             if (isEditing) {
                 await axios.put(`${API_URL}/api/products/${currentProduct.id}`, formData, {
-                    withCredentials: true,
-                    headers: {
+                    headers: { // Removed withCredentials
                         'Content-Type': 'multipart/form-data',
                     },
                 });
             } else {
                 await axios.post(`${API_URL}/api/products`, formData, {
-                    withCredentials: true,
-                    headers: {
+                    headers: { // Removed withCredentials
                         'Content-Type': 'multipart/form-data',
                     },
                 });
@@ -237,9 +163,7 @@ export default function ProductList() {
             resetForm();
             fetchProducts();
         } catch (error) {
-            if (error.response?.status === 401) {
-                setIsAuthenticated(false);
-            }
+            // Removed setIsAuthenticated(false)
             alert(`Error: ${error.response?.data?.message || error.message}`);
         }
     };
@@ -274,14 +198,10 @@ export default function ProductList() {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
             try {
-                await axios.delete(`${API_URL}/api/products/${id}`, {
-                    withCredentials: true
-                });
+                await axios.delete(`${API_URL}/api/products/${id}`); // Removed withCredentials
                 fetchProducts();
             } catch (error) {
-                if (error.response?.status === 401) {
-                    setIsAuthenticated(false);
-                }
+                // Removed setIsAuthenticated(false)
                 console.error("Error deleting product:", error);
             }
         }
@@ -322,60 +242,7 @@ export default function ProductList() {
         product.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    if (!isAuthenticated) {
-        return (
-            <div className="product-login-container">
-                <div className="login-card">
-                    <div className="login-header">
-                        <h1>Admin Login</h1>
-                    </div>
-
-                    <form onSubmit={handleLogin} className="login-form">
-                        {loginError && (
-                            <div className="login-error">
-                                {loginError}
-                            </div>
-                        )}
-
-                        <div className="form-group">
-                            <label htmlFor="email">Email Address</label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                value={loginData.email}
-                                onChange={handleLoginInputChange}
-                                required
-                                placeholder="Enter your email"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="password">Password</label>
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                value={loginData.password}
-                                onChange={handleLoginInputChange}
-                                required
-                                placeholder="Enter your password"
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            className={`login-btn ${isLoggingIn ? 'loading' : ''}`}
-                            disabled={isLoggingIn}
-                        >
-                            {isLoggingIn ? 'Logging in...' : 'Login'}
-                        </button>
-                    </form>
-                </div>
-            </div>
-        );
-    }
-
+    // Login form removed, always render product management interface
     return (
         <>
             <div className="product-list-page">

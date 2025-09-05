@@ -5,7 +5,6 @@
     padding: 20px;
     color: #3d3d3d;
     background-color: #fdfdfdee;
-    border-radius: 8px;
 }
 
 .checkout-form {
@@ -577,7 +576,7 @@ label[for="streetAddress2"]::after {
 
     .checkout-container {
         padding: 10px;
-        margin: 20px auto;
+        /* margin: 50px auto; */
     }
 
     .billing-details h1,

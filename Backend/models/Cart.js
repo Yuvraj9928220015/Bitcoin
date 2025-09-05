@@ -2,7 +2,6 @@
 
 const mongoose = require('mongoose');
 
-// Schema for individual items within the cart
 const cartItemSchema = new mongoose.Schema({
     productId: {
         type: String,
