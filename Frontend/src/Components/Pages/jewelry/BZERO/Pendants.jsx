@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import "./Pendants.css";
+import Seo from '../../../Seo/Seo';
 
 const API_URL = 'http://localhost:9000';
 
@@ -195,6 +196,12 @@ export default function Pendants() {
 
     return (
         <>
+        <Seo
+        template="product"
+        product={{ title: "Diamond Necklace" }}
+        shopName="BitcoinButik Jewelry"
+        pageTitle="Shop"
+      />
             <div data-aos="fade-up" className="bzero-page-container">
                 <div className={`bzero-main-content ${isFilterOpen ? 'content-blurred' : ''}`}>
                     <header className="bzero-header">

@@ -1,6 +1,6 @@
-// Admin.js
 import React, { useState, useEffect } from 'react';
 import './Admin.css';
+import ProductList from '../ProductList/ProductList';
 
 // UserData Component (no changes needed)
 const UserData = () => {
@@ -322,7 +322,17 @@ const ContactData = () => {
     );
 };
 
-// Dashboard Component (no changes needed)
+// New ProductData Component to wrap ProductList
+const ProductData = () => {
+    return (
+        <div className="content-section">
+            <ProductList />
+        </div>
+    );
+};
+
+
+// Dashboard Component (no changes needed for now, but you might want to link cards to sections)
 const Dashboard = () => {
     return (
         <div className="content-section">
@@ -511,6 +521,9 @@ const Admin = () => {
                 return <UserData />;
             case 'contacts':
                 return <ContactData />;
+            case 'products': // New case for Products
+                return <ProductData />;
+            // You can add cases for 'orders' here too
             default:
                 return <Dashboard />;
         }
@@ -557,16 +570,16 @@ const Admin = () => {
                         </li>
                         <li>
                             <button
-                                className={`nav-button ${activeView === 'contacts' ? 'active' : ''}`}
-                                onClick={() => handleNavClick('contacts')}
+                                className={`nav-button ${activeView === 'products' ? 'active' : ''}`} // Updated for Products
+                                onClick={() => handleNavClick('products')} // Link to products view
                             >
                                 <span className="nav-text">Product</span>
                             </button>
                         </li>
                         <li>
                             <button
-                                className={`nav-button ${activeView === 'contacts' ? 'active' : ''}`}
-                                onClick={() => handleNavClick('contacts')}
+                                className={`nav-button ${activeView === 'orders' ? 'active' : ''}`} // New for Orders
+                                onClick={() => handleNavClick('orders')} // Link to orders view
                             >
                                 <span className="nav-text">Orders</span>
                             </button>

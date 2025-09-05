@@ -408,7 +408,7 @@ const EarringsDetail = () => {
                             </div>
 
                             <div className="Payment-component">
-                                <img src="https://bitcoinbutik.com/wp-content/themes/minimog/assets/woocommerce/product-trust-badge.png" alt="Secure Checkout" />
+                                <img src="/product-trust-badge.png" alt="Secure Checkout" />
                                 <div className="">Guaranteed safe & secure checkout</div>
                             </div>
 

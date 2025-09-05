@@ -327,7 +327,7 @@ export default function ProductList() {
             <div className="product-login-container">
                 <div className="login-card">
                     <div className="login-header">
-                        <h1>Admin Panel Login</h1>
+                        <h1>Admin Login</h1>
                     </div>
 
                     <form onSubmit={handleLogin} className="login-form">
@@ -395,10 +395,6 @@ export default function ProductList() {
                             <button onClick={() => { resetForm(); setIsEditing(false); setShowForm(true); }} className="add-product-btn">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 Add Product
-                            </button>
-                            <button onClick={handleLogout} className="logout-btn">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                                Logout
                             </button>
                         </div>
                     </header>

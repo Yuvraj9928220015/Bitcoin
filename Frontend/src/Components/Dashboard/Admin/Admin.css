@@ -5,7 +5,7 @@
 }
 
 .sidebar {
-    width: 320px;
+    width: 220px;
     background: linear-gradient(to bottom, #f4d4a7, #e8ddd4);
     color: black;
     display: flex;
@@ -37,7 +37,7 @@
 }
 
 .logo-star {
-    color: rgb(0, 0, 0);
+    color: #000000;
     font-weight: bold;
     font-size: 18px;
 }
@@ -73,7 +73,7 @@
     padding: 18px 16px;
     background: none;
     border: none;
-    color: rgb(0, 0, 0);
+    color: #000000;
     text-align: left;
     border-radius: 10px;
     cursor: pointer;
@@ -83,7 +83,7 @@
 
 .nav-button:hover {
     background-color: #3b82f61a;
-    color: rgb(0, 0, 0);
+    color: #000000;
     transform: translateX(4px);
 }
 
@@ -118,7 +118,9 @@
     flex-direction: column;
     overflow: hidden;
 }
-
+.nav-text a {
+    color: #000000;
+}
 .main-header {
     background: white;
     border-bottom: 1px solid #e5e7eb;

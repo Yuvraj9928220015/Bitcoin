@@ -175,7 +175,7 @@ app.post('/api/admin/login', (req, res) => {
     
     // Validate against the .env credentials
     if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-        req.session.isAuthenticated = true; // Set a session variable
+        req.session.isAuthenticated = true;
         res.status(200).json({ message: 'Login successful' });
     } else {
         res.status(401).json({ message: 'Invalid credentials' });
