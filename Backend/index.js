@@ -172,8 +172,7 @@ app.get('/api/config/stripe', (req, res) => {
 // New Admin Login Route
 app.post('/api/admin/login', (req, res) => {
     const { email, password } = req.body;
-    
-    // Validate against the .env credentials
+
     if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
         req.session.isAuthenticated = true;
         res.status(200).json({ message: 'Login successful' });
@@ -314,11 +313,6 @@ app.get('/api/contact-info', (req, res) => {
                 saturday: "10:00 AM - 4:00 PM EST",
                 sunday: "Closed"
             },
-            socialMedia: {
-                facebook: "https://facebook.com/bitcoinejewelry",
-                instagram: "https://instagram.com/bitcoinejewelry",
-                twitter: "https://twitter.com/bitcoinejewelry"
-            }
         };
         res.status(200).json(contactDetails);
     } catch (error) {
