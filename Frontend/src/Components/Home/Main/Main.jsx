@@ -9,7 +9,7 @@ export default function Main() {
                     <div className="showcase-section serpenti-section">
                         <a href="">
                             <img
-                                src="./public/Main-Banner-1.webp"
+                                src="./Main-Banner-1.webp"
                                 alt="Serpenti Jewelry"
                                 className="showcase-image"
                             />
@@ -29,7 +29,7 @@ export default function Main() {
 
                     <div className="showcase-section divas-section">
                         <img
-                            src="./public/Main-Banner-2.webp"
+                            src="./Main-Banner-2.webp"
                             alt="Divas Dream Jewelry"
                             className="showcase-image"
                         />
@@ -54,7 +54,7 @@ export default function Main() {
                     <main data-aos="fade-up" className="main-content">
                         <div className="hero-section">
                             <div className="hero-image">
-                                <img src="./public/Main-Banner-3.webp" alt="Bulgari Hero" />
+                                <img src="./Main-Banner-3.webp" alt="Bulgari Hero" />
                                 <div className="hero-overlay">
                                     <div className="hero-text">
                                         <div className="">

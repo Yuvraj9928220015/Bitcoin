@@ -151,7 +151,7 @@ export default function Stories() {
             <main data-aos="fade-up" className="main-content">
                 <div className="hero-section">
                     <div className="hero-image">
-                        <img src="./public/Banner-men.webp" alt="Bulgari Hero" />
+                        <img src="./Banner-men.webp" alt="Bulgari Hero" />
                         <div className="hero-overlay">
                             <div className="hero-text">
                                 <div className='hero-text-title'>An Eternally modern Icon</div>
