@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 // import "./Pendants.css";
 
-const API_URL = 'http://localhost:9000';
+const API_URL = 'https://api.bitcoinbutik.com';
 
 const ProductCard = ({ product }) => {
     const [isHovered, setIsHovered] = useState(false);

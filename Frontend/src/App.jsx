@@ -40,7 +40,7 @@ import Terms from './Components/Pages/Terms/Terms';
 import Admin from './Components/Dashboard/Admin/Admin';
 // import ContactData from './Components/Dashboard/ContactData/ContactData';
 // import UserData from './Components/Dashboard/UserData/UserData';
-axios.defaults.baseURL = 'http://localhost:9000';
+axios.defaults.baseURL = 'https://api.bitcoinbutik.com';
 axios.defaults.withCredentials = true;
 
 

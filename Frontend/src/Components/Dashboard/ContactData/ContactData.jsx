@@ -11,7 +11,7 @@ const ContactData = () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch('http://localhost:9000/api/contact', {
+                const response = await fetch('https://api.bitcoinbutik.com/api/contact', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ const ContactData = () => {
             <div className="contact-data-container status-container error-message">
                 <p>Error: {error}</p>
                 <p>Please ensure you are logged in and have the necessary permissions to view contact submissions.</p>
-                <p>Also, check if your backend server is running on `http://localhost:9000` and the `/api/contact` endpoint is configured to return data.</p>
+                <p>Also, check if your backend server is running on `https://api.bitcoinbutik.com` and the `/api/contact` endpoint is configured to return data.</p>
             </div>
         );
     }

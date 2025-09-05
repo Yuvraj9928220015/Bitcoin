@@ -15,7 +15,7 @@ import { CiLock } from "react-icons/ci";
 import { useCart } from '../../context/CartContext';
 import './CheckoutPage.css';
 
-const API_URL = 'http://localhost:9000';
+const API_URL = 'https://api.bitcoinbutik.com';
 
 const CARD_ELEMENT_OPTIONS = {
     style: {

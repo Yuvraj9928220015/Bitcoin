@@ -6,7 +6,7 @@ import RingsDetail2 from './RingsDetail2';
 import { useCart } from '../../../context/CartContext';
 import "./RingsDetail.css";
 
-const API_URL = 'http://localhost:9000';
+const API_URL = 'https://api.bitcoinbutik.com';
 
 // --- HELPER FUNCTIONS ---
 

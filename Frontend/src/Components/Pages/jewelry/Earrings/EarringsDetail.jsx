@@ -6,7 +6,7 @@ import EarringsDetail2 from './EarringsDetail2';
 import { useCart } from '../../../context/CartContext';
 import "./EarringsDetail.css";
 
-const API_URL = 'http://localhost:9000';
+const API_URL = 'https://api.bitcoinbutik.com';
 
 // --- HELPER FUNCTIONS ---
 
