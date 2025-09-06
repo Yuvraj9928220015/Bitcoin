@@ -113,7 +113,7 @@ const Header = () => {
                                         <div className="content-overlay">
                                             <div className="overlay-content">
                                                 <h2 className="video-title">{video.title}</h2>
-                                                <p className="Header-video-description">{video.description}</p>
+                                                <p className="hero-text-title">{video.description}</p>
                                                 <div className="">
                                                     <div class="hero-cta-btn-v4">Discover The Collection</div>
                                                 </div>
