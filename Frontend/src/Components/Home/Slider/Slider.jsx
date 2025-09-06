@@ -60,7 +60,7 @@ export default function Slider() {
                 type: 'loop',
                 arrows: true,
                 pagination: false,
-                gap: '1rem',
+                gap: '1.2rem',
                 autoplay: true,
                 interval: 3000,
                 pauseOnHover: true,

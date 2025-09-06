@@ -78,7 +78,6 @@ const RingsDetail2 = () => {
 
                 <Header />
 
-                {/* UPDATED: Replaced Bootstrap classes with custom classes for a self-contained component */}
                 <section data-aos="fade-up" className="bvlgari-section">
                     <div className="bvlgari-content-wrapper">
                         <div className="bvlgari-text-content">
@@ -119,7 +118,7 @@ const RingsDetail2 = () => {
                     </div>
                 </section>
 
-                {/* UPDATED: Cleaned up JSX and added meaningful class names */}
+                {/* ==================== UPDATED: Cleaned up JSX and added meaningful class names ========================= */}
                 <section data-aos="fade-up" className="exclusive-section">
                     <div className="exclusive-section-title">Exclusive Bvlgari services</div>
                     <div className="exclusive-grid">

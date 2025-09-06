@@ -275,7 +275,7 @@ const ProductDetail = () => {
     const increaseQuantity = () => setQuantity(prev => prev + 1);
     const decreaseQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
 
-    // --- Render Logic ---
+    // ================== Render Logic ====================
     if (loading) return <div className="pdp-loading">Loading Product Details...</div>;
     if (error) return <div className="pdp-error">Error: {error}</div>;
     if (!product) return <div className="pdp-loading">Product not found.</div>;

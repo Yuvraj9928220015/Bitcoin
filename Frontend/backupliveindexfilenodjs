@@ -1,15 +1,13 @@
-const express = require('express');^C
-const dotenv = require('dotenv');# ^C
+const express = require('express');
+const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const cors = require('cors');kend# cls
-const Stripe = require("stripe");mean:
-const path = require('path');ls (0.20241108)
+const cors = require('cors');
+const Stripe = require("stripe");
+const path = require('path');
 const nodemailer = require('nodemailer');
-const jwt = require('jsonwebtoken');.5-1ubuntu1.25.04.1)
-const bcrypt = require('bcryptjs');3.2.6-16ubuntu1)
-See 'snap info <snapname>' for additional versions.
-dotenv.config();w/Bitcoin/Backend# nano index.js
-root@api:/var/www/Bitcoin/Backend#
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+dotenv.config();
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 

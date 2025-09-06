@@ -421,7 +421,7 @@ label[for="streetAddress2"]::after {
 
 .checkout-item-image {
     width: 70px;
-    height: 90px;
+    height: 100px;
     flex-shrink: 0;
 }
 

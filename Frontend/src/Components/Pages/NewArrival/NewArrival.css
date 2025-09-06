@@ -195,18 +195,6 @@
         min-height: auto;
         aspect-ratio: 1;
     }
-
-    .category-overlay {
-        position: static;
-        transform: none;
-        background: #000000cc;
-        padding: 0.8rem 0.5rem;
-    }
-
-    .category-item:hover .category-overlay {
-        transform: none;
-    }
-
     .category-overlay h3 {
         font-size: 0.9rem;
     }
