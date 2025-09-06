@@ -13,7 +13,7 @@ const UserData = () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch('https://api.bitcoinbutik.com/api/users', {
+                const response = await fetch('http://localhost:9000/api/users', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -163,7 +163,7 @@ const ContactData = () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch('https://api.bitcoinbutik.com/api/contact', {
+                const response = await fetch('http://localhost:9000/api/contact', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -405,7 +405,7 @@ const LoginForm = ({ onLogin }) => {
         setError(null);
 
         try {
-            const response = await fetch('https://api.bitcoinbutik.com/api/admin/login', {
+            const response = await fetch('http://localhost:9000/api/admin/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -473,7 +473,7 @@ const Admin = () => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const response = await fetch('https://api.bitcoinbutik.com/api/admin/check-auth', {
+                const response = await fetch('http://localhost:9000/api/admin/check-auth', {
                     method: 'GET',
                     credentials: 'include',
                 });
@@ -497,7 +497,7 @@ const Admin = () => {
 
     const handleLogout = async () => {
         try {
-            await fetch('https://api.bitcoinbutik.com/api/admin/logout', {
+            await fetch('http://localhost:9000/api/admin/logout', {
                 method: 'POST',
                 credentials: 'include',
             });

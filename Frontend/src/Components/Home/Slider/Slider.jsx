@@ -67,7 +67,7 @@ export default function Slider() {
                 speed: 800,
                 easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                 breakpoints: {
-                    1200: {
+                    1900: {
                         perPage: 3,
                         gap: '0.5rem',
                         focus: 'center',
