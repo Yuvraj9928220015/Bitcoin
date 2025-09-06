@@ -33,7 +33,7 @@
 
 .bzero-header-left .breadcrumb {
     font-size: 0.9rem;
-    color: #555;
+    color: #3f3f3f;
     display: block;
     margin-bottom: 0.2rem;
 }
@@ -41,14 +41,15 @@
 .bzero-header-left .bzero-title {
     font-size: 2rem;
     font-weight: 300;
-    color: #000;
+    color: #272727;
+    font-family: 'Roboto', sans-serif;
 }
 
 .bzero-header-left .bzero-title sup {
     font-size: 1rem;
     font-weight: 400;
-    top: -1.8rem;
-    left: -7px;
+    top: -1.3rem;
+    left: 0px;
     color: #888;
 }
 
@@ -692,6 +693,7 @@
     .product-price {
         font-size: 11px;
     }
+
     .bzero-title {
         font-size: 18px;
     }
@@ -704,6 +706,7 @@
         padding-top: 4.6rem;
         padding-bottom: 0.5rem;
     }
+
     .bzero-title {
         font-size: 1px;
     }

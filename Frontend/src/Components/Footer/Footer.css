@@ -35,7 +35,8 @@
 
 .footer-name {
   font-size: 34px;
-  font-weight: 100 !important;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 200;
   color: #664D28;
 }
 

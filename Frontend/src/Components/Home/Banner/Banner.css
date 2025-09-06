@@ -42,9 +42,10 @@
 }
 
 .hero-text-title {
-    font-size: 2.1rem;
-    font-weight: 300;
+    font-size: 2rem;
+    font-weight: 200;
     text-transform: uppercase;
+    font-family: 'Roboto', sans-serif;
     letter-spacing: -0.02em;
     line-height: 1.1;
     letter-spacing: 1px;
