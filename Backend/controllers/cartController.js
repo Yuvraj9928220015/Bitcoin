@@ -259,7 +259,7 @@ exports.syncCart = async (req, res) => {
         console.log(`Syncing cart for browser ${browserId}`);
 
         const cart = await getBrowserCart(browserId);
-        
+
         if (Array.isArray(localCartItems) && localCartItems.length > 0 && cart.items.length === 0) {
             cart.items = localCartItems.map(item => ({
                 cartItemId: item.cartItemId || item.cartId || `${item.productId || item.id}-${item.size || 'default'}-${Date.now()}`,
