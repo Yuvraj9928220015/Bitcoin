@@ -11,6 +11,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
+
 dotenv.config();
 
 const app = express();
@@ -28,7 +29,7 @@ app.use(cors({
         "http://localhost:5174",
         "http://bitcoinbutik.com",
         "https://bitcoinbutik.com",
-        "https://www.bitcoinbutik.com" 
+        "https://www.bitcoinbutik.com"
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -138,6 +139,7 @@ const cartRoutes = require('./routes/cartRoutes');
 const contactRouter = require('./routes/contactRoutes');
 const checkoutRoutes = require('./routes/checkoutRoutes');
 const registerAuthRoutes = require('./routes/RegisterRoutes');
+const questionRoutes = require('./routes/questionRoutes');
 
 app.get('/', (req, res) => res.send('Bitcoine API is running - LIVE Stripe Integration Active!'));
 
@@ -469,6 +471,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/contact', contactRouter);
 app.use('/api', checkoutRoutes);
+app.use('/api/questions', questionRoutes);
 
 app.get('/api/products-protected', verifyAuth, (req, res) => {
     res.json({ message: 'This is a protected route. You are authenticated!' });
