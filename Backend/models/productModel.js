@@ -1,5 +1,3 @@
-// models/productModel.js
-
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
@@ -22,9 +20,13 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add a description']
     },
-    price: {
+    price: { 
         type: Number,
-        required: [true, 'Please add a price']
+        required: [true, 'Please add a silver price']
+    },
+    goldPrice: {
+        type: Number,
+        required: [true, 'Please add a gold price']
     },
     image: {
         type: [String],
@@ -33,11 +35,15 @@ const productSchema = new mongoose.Schema({
     },
     video: {
         type: String,
-        // required: true
+        // required: false
     }
 }, {
     timestamps: true
 });
 
+// Add index for better query performance
+productSchema.index({ category: 1 });
+productSchema.index({ price: 1 });
+productSchema.index({ goldPrice: 1 });
 
 module.exports = mongoose.model('Product', productSchema);
