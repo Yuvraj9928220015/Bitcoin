@@ -566,10 +566,10 @@ const Navbar = () => {
                                             {isPendantsOpen && (
                                                 <ul className="submenu-list">
                                                     <li onClick={() => handleMenuLinkClick('Womans Pendants')}>
-                                                        <Link to="/Pendants" onClick={closeMenuAndNavigate}>Womans</Link>
+                                                        <Link to="/Pendants" onClick={closeMenuAndNavigate}>Womens</Link>
                                                     </li>
                                                     <li onClick={() => handleMenuLinkClick('Mans Pendants')}>
-                                                        <Link to="/Man" onClick={closeMenuAndNavigate}>Mans</Link>
+                                                        <Link to="/Man" onClick={closeMenuAndNavigate}>Mens</Link>
                                                     </li>
                                                 </ul>
                                             )}

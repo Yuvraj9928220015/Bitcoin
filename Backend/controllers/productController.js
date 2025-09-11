@@ -11,9 +11,20 @@ const deleteFilesOnError = (files) => {
 
     if (allFiles.length > 0) {
         allFiles.forEach(file => {
-            fs.unlink(file.path, (err) => {
+            const filePath = path.resolve(file.path);
+            fs.unlink(filePath, (err) => {
                 if (err) console.log('Error deleting orphaned file:', err);
             });
+        });
+    }
+};
+
+// Helper function to safely delete file
+const deleteFile = (filePath) => {
+    if (filePath) {
+        const fullPath = path.resolve(filePath);
+        fs.unlink(fullPath, (err) => {
+            if (err) console.error('Error deleting file:', err);
         });
     }
 };
@@ -82,15 +93,28 @@ exports.getProductById = async (req, res) => {
 // Add new product
 exports.addProduct = async (req, res) => {
     try {
+        console.log('Request body:', req.body);
+        console.log('Request files:', req.files);
+
         const { title, price, goldPrice, category, description } = req.body;
-        const images = req.files.images || [];
-        const video = req.files.video ? req.files.video[0] : null;
+        const images = req.files?.images || [];
+        const video = req.files?.video && req.files.video.length > 0 ? req.files.video[0] : null;
+
+        console.log('Images:', images);
+        console.log('Video:', video);
 
         // Validation
-        if (!title || !price || !goldPrice || !category || !description || images.length === 0) {
+        if (!title || !price || !goldPrice || !category || !description) {
             deleteFilesOnError(req.files);
             return res.status(400).json({ 
-                message: 'Please fill all required fields: title, silver price, gold price, category, description and upload at least one image.' 
+                message: 'Please fill all required fields: title, silver price, gold price, category, and description.' 
+            });
+        }
+
+        if (images.length === 0) {
+            deleteFilesOnError(req.files);
+            return res.status(400).json({ 
+                message: 'Please upload at least one image.' 
             });
         }
 
@@ -115,18 +139,23 @@ exports.addProduct = async (req, res) => {
         const imagePaths = images.map(file => file.path);
         const videoPath = video ? video.path : null;
 
+        console.log('Image paths:', imagePaths);
+        console.log('Video path:', videoPath);
+
         const newProduct = new Product({
             sessionId: req.sessionID,
             title: title.trim(),
             category: category.trim(),
             description: description.trim(),
-            price: silverPrice, // Silver Price
-            goldPrice: goldPriceValue, // Gold Price
+            price: silverPrice,
+            goldPrice: goldPriceValue,
             image: imagePaths,
             video: videoPath
         });
 
         const savedProduct = await newProduct.save();
+        console.log('Product saved successfully:', savedProduct);
+        
         res.status(201).json({
             message: 'Product created successfully',
             product: savedProduct
@@ -154,10 +183,13 @@ exports.addProduct = async (req, res) => {
 // Update product
 exports.updateProduct = async (req, res) => {
     try {
+        console.log('Update request body:', req.body);
+        console.log('Update request files:', req.files);
+
         const { title, price, goldPrice, category, description } = req.body;
         const imageOrder = req.body.imageOrder ? JSON.parse(req.body.imageOrder) : [];
-        const newImageFiles = req.files.images || [];
-        const newVideoFile = req.files.video ? req.files.video[0] : null;
+        const newImageFiles = req.files?.images || [];
+        const newVideoFile = req.files?.video && req.files.video.length > 0 ? req.files.video[0] : null;
 
         const product = await Product.findById(req.params.id);
 
@@ -170,21 +202,26 @@ exports.updateProduct = async (req, res) => {
 
         // Handle image updates
         let newFileIndex = 0;
-        const finalImagePaths = imageOrder.map(item => {
-            if (item.startsWith('NEW_FILE_')) {
-                const newFile = newImageFiles[newFileIndex++];
-                return newFile ? newFile.path : null;
-            }
-            return item;
-        }).filter(Boolean);
+        const finalImagePaths = imageOrder.length > 0 
+            ? imageOrder.map(item => {
+                if (item.startsWith('NEW_FILE_')) {
+                    const newFile = newImageFiles[newFileIndex++];
+                    return newFile ? newFile.path : null;
+                }
+                return item;
+            }).filter(Boolean)
+            : product.image || [];
+
+        // If new images are uploaded but no order is specified, use the new images
+        if (newImageFiles.length > 0 && imageOrder.length === 0) {
+            finalImagePaths.push(...newImageFiles.map(file => file.path));
+        }
 
         // Delete removed images
         const originalImages = product.image || [];
         const imagesToDelete = originalImages.filter(imgPath => !finalImagePaths.includes(imgPath));
         imagesToDelete.forEach(imgPath => {
-            fs.unlink(path.resolve(imgPath), (err) => {
-                if (err) console.error('Error deleting old image:', err);
-            });
+            deleteFile(imgPath);
         });
 
         // Handle video updates
@@ -192,18 +229,18 @@ exports.updateProduct = async (req, res) => {
         const oldVideoPath = product.video;
 
         if (newVideoFile) {
+            console.log('New video file uploaded:', newVideoFile.path);
             finalVideoPath = newVideoFile.path;
+            // Delete old video if exists
             if (oldVideoPath) {
-                fs.unlink(path.resolve(oldVideoPath), (err) => {
-                    if (err) console.error('Error deleting old video:', err);
-                });
+                deleteFile(oldVideoPath);
             }
-        } else if (req.body.video === '') {
+        } else if (req.body.video === '' || req.body.removeVideo === 'true') {
+            // Remove video if explicitly requested
+            console.log('Removing video');
             finalVideoPath = null;
             if (oldVideoPath) {
-                fs.unlink(path.resolve(oldVideoPath), (err) => {
-                    if (err) console.error('Error deleting old video:', err);
-                });
+                deleteFile(oldVideoPath);
             }
         }
 
@@ -211,7 +248,7 @@ exports.updateProduct = async (req, res) => {
         let silverPrice = product.price;
         let goldPriceValue = product.goldPrice;
         
-        if (price) {
+        if (price && price !== '') {
             silverPrice = parseFloat(price);
             if (isNaN(silverPrice) || silverPrice <= 0) {
                 deleteFilesOnError(req.files);
@@ -221,7 +258,7 @@ exports.updateProduct = async (req, res) => {
             }
         }
         
-        if (goldPrice) {
+        if (goldPrice && goldPrice !== '') {
             goldPriceValue = parseFloat(goldPrice);
             if (isNaN(goldPriceValue) || goldPriceValue <= 0) {
                 deleteFilesOnError(req.files);
@@ -232,11 +269,11 @@ exports.updateProduct = async (req, res) => {
         }
 
         // Update product fields
-        product.title = title ? title.trim() : product.title;
-        product.price = silverPrice; // Silver Price
-        product.goldPrice = goldPriceValue; // Gold Price
-        product.category = category ? category.trim() : product.category;
-        product.description = description ? description.trim() : product.description;
+        product.title = title && title.trim() !== '' ? title.trim() : product.title;
+        product.price = silverPrice;
+        product.goldPrice = goldPriceValue;
+        product.category = category && category.trim() !== '' ? category.trim() : product.category;
+        product.description = description && description.trim() !== '' ? description.trim() : product.description;
         product.image = finalImagePaths;
         product.video = finalVideoPath;
 
@@ -248,7 +285,11 @@ exports.updateProduct = async (req, res) => {
             });
         }
 
+        console.log('Final video path before save:', product.video);
+
         const updatedProduct = await product.save();
+        console.log('Product updated successfully:', updatedProduct);
+        
         res.status(200).json({
             message: 'Product updated successfully',
             product: updatedProduct
@@ -293,16 +334,12 @@ exports.deleteProduct = async (req, res) => {
         // Delete associated files
         if (product.image && product.image.length > 0) {
             product.image.forEach(imgPath => {
-                fs.unlink(path.resolve(imgPath), (err) => {
-                    if (err) console.log('Error deleting image file:', err);
-                });
+                deleteFile(imgPath);
             });
         }
 
         if (product.video) {
-            fs.unlink(path.resolve(product.video), (err) => {
-                if (err) console.log('Error deleting video file:', err);
-            });
+            deleteFile(product.video);
         }
 
         await Product.deleteOne({ _id: req.params.id });
