@@ -15,6 +15,7 @@ const isAuthenticated = (req, res, next) => {
     }
 };
 
+
 // Login Route
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
