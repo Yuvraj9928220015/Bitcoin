@@ -7,7 +7,7 @@ import ManDetail2 from './ManDetail2';
 import { useCart } from '../../../context/CartContext';
 import "./ManDetail.css";
 
-const API_URL = 'http://localhost:9000';
+const API_URL = 'https://api.bitcoinbutik.com';
 
 // --- HELPER FUNCTIONS ---
 

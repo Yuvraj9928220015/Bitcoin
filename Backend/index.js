@@ -16,8 +16,8 @@ dotenv.config();
 
 const app = express();
 
-// const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Bitcoine";
-const MONGO_URL = "mongodb://bituser:Bitcoinbutik%402111@93.127.172.98:27017/Bitcoine?authSource=Bitcoine";
+const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Bitcoine";
+// const MONGO_URL = "mongodb://bituser:Bitcoinbutik%402111@93.127.172.98:27017/Bitcoine?authSource=Bitcoine";
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_for_jwt_change_in_production';
 const PORT = process.env.PORT || 9000;
 
@@ -365,14 +365,11 @@ app.post("/api/payment", async (req, res) => {
 
         const payment = await stripe.paymentIntents.create({
             amount: amount,
-            currency: "USD",
+            currency: "usd",
             description: `Bitcoine Jewelry Purchase - Order for ${customerInfo?.email || 'customer'}`,
             payment_method: id,
-            confirm: true,
-            automatic_payment_methods: {
-                enabled: true,
-                allow_redirects: "never"
-            },
+            confirm: true, // यह रखें
+            // automatic_payment_methods पूरा block हटा दें - यह line problem है
             metadata: {
                 browserId: browserId || 'unknown',
                 sessionId: req.sessionID,

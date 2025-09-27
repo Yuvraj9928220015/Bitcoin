@@ -37,6 +37,7 @@ const fileFilter = (req, file, cb) => {
     const imageTypes = /jpeg|jpg|png|gif|webp/;
     const videoTypes = /mp4|mov|avi|wmv|mkv|flv|webm/;
     const allTypes = /jpeg|jpg|png|gif|webp|mp4|mov|avi|wmv|mkv|flv|webm/;
+    
 
     const extname = path.extname(file.originalname).toLowerCase();
     const mimetype = file.mimetype;
@@ -82,7 +83,7 @@ const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 100 * 1024 * 1024, // 100MB limit
+        fileSize: 100 * 1024 * 1024,
         files: 11 // 10 images + 1 video max
     }
 }).fields([

@@ -26,8 +26,8 @@ router.post('/create-checkout-session', async (req, res) => {
                 },
             ],
             mode: 'payment',
-            success_url: "http://localhost:9000/success",
-            cancel_url: "http://localhost:9000/cancel",
+            success_url: "https://api.bitcoinbutik.com/success",
+            cancel_url: "https://api.bitcoinbutik.com/cancel",
         });
 
         res.send({ url: session.url });

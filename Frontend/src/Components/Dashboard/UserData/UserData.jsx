@@ -11,7 +11,7 @@ const UserData = () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch('http://localhost:9000/api/users', {
+                const response = await fetch('https://api.bitcoinbutik.com/api/users', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
