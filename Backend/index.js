@@ -15,8 +15,8 @@ dotenv.config();
 
 const app = express();
 
-const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Bitcoine";
-// const MONGO_URL = "mongodb://bituser:Bitcoinbutik%402111@93.127.172.98:27017/Bitcoine?authSource=Bitcoine";
+// const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Bitcoine";
+const MONGO_URL = "mongodb://bituser:Bitcoinbutik%402111@93.127.172.98:27017/Bitcoine?authSource=Bitcoine";
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_for_jwt_change_in_production';
 const PORT = process.env.PORT || 9000;
 
@@ -183,8 +183,8 @@ app.get('/api/config/stripe', (req, res) => {
 app.post('/api/admin/login', (req, res) => {
     const { email, password } = req.body;
 
-    // if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-    if (email == "bitcoinbutik123@gmail.com" && password == "Bitcoinbutik") {
+    if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+    // if (email == "bitcoinbutik123@gmail.com" && password == "Bitcoinbutik") {
         req.session.isAuthenticated = true;
         res.status(200).json({ message: 'Login successful' });
     } else {
