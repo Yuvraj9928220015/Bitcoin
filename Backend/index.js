@@ -11,13 +11,12 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 
-
 dotenv.config();
 
 const app = express();
 
-const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Bitcoine";
-// const MONGO_URL = "mongodb://bituser:Bitcoinbutik%402111@93.127.172.98:27017/Bitcoine?authSource=Bitcoine";
+// const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Bitcoine";
+const MONGO_URL = "mongodb://bituser:Bitcoinbutik%402111@93.127.172.98:27017/Bitcoine?authSource=Bitcoine";
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_for_jwt_change_in_production';
 const PORT = process.env.PORT || 9000;
 
@@ -48,7 +47,6 @@ app.set('trust proxy', true);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ limit: '500mb', extended: true }));
-
 
 mongoose.connect(MONGO_URL)
     .then(() => {
@@ -116,7 +114,7 @@ app.use((req, res, next) => {
         console.log('User Agent:', req.browserInfo.userAgent.substring(0, Math.min(req.browserInfo.userAgent.length, 50)) + '...');
 
         if (req.path.includes('/cart')) {
-            console.log('🛒Cart route accessed');
+            console.log('Cart route accessed');
         }
     }
     next();
@@ -195,7 +193,6 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 app.use('/api/auth', registerAuthRoutes);
-
 
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
@@ -298,7 +295,6 @@ app.get('/api/auth/verify', (req, res) => {
     }
 });
 
-
 app.get('/api/users', async (req, res) => {
     try {
         const users = await Register.find().select('-password');
@@ -311,7 +307,6 @@ app.get('/api/users', async (req, res) => {
         });
     }
 });
-
 
 // API Endpoint for Contact Information
 app.get('/api/contact-info', (req, res) => {
@@ -334,20 +329,44 @@ app.get('/api/contact-info', (req, res) => {
     }
 });
 
-// --- Stripe Payment Processing ---
+
+
+// **************************************************************
+
+
+
+
+// --- FIXED Stripe Payment Processing ---
 app.post("/api/payment", async (req, res) => {
-    let { amount, id, browserId, customerInfo, items, note } = req.body;
+    let { amount, id, paymentMethodId, browserId, customerInfo, items, note } = req.body;
 
     console.log("=== LIVE PAYMENT REQUEST ===");
+    console.log("Raw request body:", JSON.stringify(req.body, null, 2));
+
+    const finalPaymentMethodId = paymentMethodId || id;
+
     console.log("Amount:", amount);
-    console.log("Payment Method ID:", id);
+    console.log("Payment Method ID (id):", id);
+    console.log("Payment Method ID (paymentMethodId):", paymentMethodId);
+    console.log("Final Payment Method ID:", finalPaymentMethodId);
     console.log("Customer:", customerInfo?.firstName, customerInfo?.lastName);
     console.log("Items count:", items?.length);
 
-    if (!amount || !id) {
+    // Updated validation to check for either field
+    if (!amount || (!id && !paymentMethodId)) {
+        console.error("Validation failed:", {
+            amount: amount,
+            id: id,
+            paymentMethodId: paymentMethodId
+        });
         return res.status(400).json({
-            message: "Amount and payment ID are required.",
-            success: false
+            message: "Amount and payment method ID are required.",
+            success: false,
+            debug: {
+                amountReceived: amount,
+                idReceived: id,
+                paymentMethodIdReceived: paymentMethodId
+            }
         });
     }
 
@@ -362,14 +381,14 @@ app.post("/api/payment", async (req, res) => {
         console.log(`Processing LIVE payment for amount: $${amount / 100} USD`);
         console.log(`Customer: ${customerInfo?.firstName} ${customerInfo?.lastName}`);
         console.log(`Email: ${customerInfo?.email}`);
+        console.log(`Using Payment Method ID: ${finalPaymentMethodId}`);
 
         const payment = await stripe.paymentIntents.create({
             amount: amount,
             currency: "usd",
             description: `Bitcoine Jewelry Purchase - Order for ${customerInfo?.email || 'customer'}`,
-            payment_method: id,
-            confirm: true, // यह रखें
-            // automatic_payment_methods पूरा block हटा दें - यह line problem है
+            payment_method: finalPaymentMethodId,
+            confirm: true,
             metadata: {
                 browserId: browserId || 'unknown',
                 sessionId: req.sessionID,
@@ -439,7 +458,7 @@ app.post("/api/payment", async (req, res) => {
             dashboardUrl: "https://dashboard.stripe.com/payments"
         });
     } catch (error) {
-        console.error("❌ Stripe LIVE Payment Error:", error);
+        console.error("Stripe LIVE Payment Error:", error);
 
         let errorMessage = "Payment failed. Please try again.";
 
@@ -467,6 +486,13 @@ app.post("/api/payment", async (req, res) => {
     }
 });
 
+
+
+
+
+// ************************************************************
+
+
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/contact', contactRouter);
@@ -476,7 +502,6 @@ app.use('/api/questions', questionRoutes);
 app.get('/api/products-protected', verifyAuth, (req, res) => {
     res.json({ message: 'This is a protected route. You are authenticated!' });
 });
-
 
 app.use((err, req, res, next) => {
     console.error('Error:', err);
@@ -545,7 +570,7 @@ const cleanupOldCarts = async () => {
         });
         console.log(`Cleaned up ${result.deletedCount} old carts`);
     } catch (error) {
-        console.error('❌ Error cleaning up old carts:', error);
+        console.error('Error cleaning up old carts:', error);
     }
 };
 
