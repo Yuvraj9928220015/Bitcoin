@@ -125,6 +125,7 @@ exports.addProduct = async (req, res) => {
         if (isNaN(silverPrice) || silverPrice <= 0) {
             deleteFilesOnError(req.files);
             return res.status(400).json({ 
+                // 
                 message: 'Please provide a valid silver price.' 
             });
         }
@@ -236,7 +237,6 @@ exports.updateProduct = async (req, res) => {
                 deleteFile(oldVideoPath);
             }
         } else if (req.body.video === '' || req.body.removeVideo === 'true') {
-            // Remove video if explicitly requested
             console.log('Removing video');
             finalVideoPath = null;
             if (oldVideoPath) {

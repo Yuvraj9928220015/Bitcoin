@@ -1,5 +1,5 @@
-const express = require('express');
 const dotenv = require('dotenv');
+const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const Stripe = require("stripe");
@@ -184,7 +184,7 @@ app.post('/api/admin/login', (req, res) => {
     const { email, password } = req.body;
 
     if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-    // if (email == "bitcoinbutik123@gmail.com" && password == "Bitcoinbutik") {
+        // if (email == "bitcoinbutik123@gmail.com" && password == "Bitcoinbutik") {
         req.session.isAuthenticated = true;
         res.status(200).json({ message: 'Login successful' });
     } else {
@@ -389,6 +389,7 @@ app.post("/api/payment", async (req, res) => {
             description: `Bitcoine Jewelry Purchase - Order for ${customerInfo?.email || 'customer'}`,
             payment_method: finalPaymentMethodId,
             confirm: true,
+            return_url: "http://localhost:5173/payment-success",
             metadata: {
                 browserId: browserId || 'unknown',
                 sessionId: req.sessionID,

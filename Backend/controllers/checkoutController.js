@@ -3,9 +3,8 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 exports.placeOrder = async (req, res) => {
     try {
-        // Add detailed logging of the request body
-        console.log('📥 Received payment request:', JSON.stringify(req.body, null, 2));
-        
+        console.log('📥 Received payment request');
+
         const {
             amount,
             id,
@@ -17,115 +16,50 @@ exports.placeOrder = async (req, res) => {
             appliedCoupon
         } = req.body;
 
-        // Fix: Use paymentMethodId if id is not provided (frontend sends paymentMethodId)
         const finalPaymentMethodId = paymentMethodId || id;
 
-        // Log each field individually for debugging
-        console.log('🔍 Field validation:', {
-            amount: amount,
-            amountType: typeof amount,
-            id: id,
-            paymentMethodId: paymentMethodId,
-            finalPaymentMethodId: finalPaymentMethodId,
-            itemsCount: items ? items.length : 'undefined',
-            customerInfoExists: !!customerInfo
-        });
-
-        // Enhanced validation with better error messages
-        if (!amount && amount !== 0) {
-            console.error('❌ Amount validation failed:', amount);
-            return res.status(400).json({ success: false, message: 'Amount is required.' });
+        // Validation
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ success: false, message: 'Invalid amount.' });
         }
 
         if (!finalPaymentMethodId) {
-            console.error('❌ PaymentMethodId validation failed. Received:', {
-                id: id,
-                paymentMethodId: paymentMethodId,
-                finalPaymentMethodId: finalPaymentMethodId
-            });
-            return res.status(400).json({ success: false, message: 'Payment method ID is required.' });
+            return res.status(400).json({ success: false, message: 'Payment method ID required.' });
         }
 
-        if (!items) {
-            console.error('❌ Items validation failed:', items);
-            return res.status(400).json({ success: false, message: 'Items are required.' });
+        if (!items || items.length === 0) {
+            return res.status(400).json({ success: false, message: 'Cart is empty.' });
         }
 
         if (!customerInfo) {
-            console.error('❌ CustomerInfo validation failed:', customerInfo);
-            return res.status(400).json({ success: false, message: 'Customer information is required.' });
+            return res.status(400).json({ success: false, message: 'Customer info required.' });
         }
 
-        if (!Array.isArray(items) || items.length === 0) {
-            console.error('❌ Items array validation failed:', items);
-            return res.status(400).json({ success: false, message: 'Cart is empty. Cannot place an order.' });
-        }
+        console.log('✅ Validation passed');
+        console.log('💳 Creating PaymentIntent...');
 
-        // Validate amount is a positive number
-        if (typeof amount !== 'number' || amount <= 0) {
-            console.error('❌ Amount number validation failed:', amount, typeof amount);
-            return res.status(400).json({ success: false, message: 'Invalid amount provided.' });
-        }
-
-        console.log('✅ All validations passed, proceeding with payment...');
-
-        // Calculate server-side totals for verification
-        const serverCalculatedSubtotal = items.reduce((sum, item) => {
-            const itemPrice = parseFloat(item.price) || 0;
-            const itemQuantity = parseInt(item.quantity) || 0;
-            return sum + (itemPrice * itemQuantity);
-        }, 0);
-
-        let serverCalculatedFinalTotal = serverCalculatedSubtotal;
-        let discountAmount = 0;
-
-        if (appliedCoupon && appliedCoupon.code && appliedCoupon.discount) {
-            discountAmount = parseFloat(appliedCoupon.discount) || 0;
-            serverCalculatedFinalTotal -= discountAmount;
-        }
-
-        // Verify the amount sent from client matches server calculation (allow small tolerance for rounding)
-        const tolerance = 5; // 5 cents tolerance
-        const expectedAmountInCents = Math.round(serverCalculatedFinalTotal * 100);
-        
-        console.log('💰 Amount verification:', {
-            clientAmount: amount,
-            serverCalculated: expectedAmountInCents,
-            difference: Math.abs(amount - expectedAmountInCents)
-        });
-        
-        if (Math.abs(amount - expectedAmountInCents) > tolerance) {
-            console.warn(`Client amount mismatch: Client sent ${amount} cents, Server calculated ${expectedAmountInCents} cents.`);
-            return res.status(400).json({ 
-                success: false, 
-                message: `Amount mismatch. Expected ${expectedAmountInCents} cents, received ${amount} cents.` 
-            });
-        }
-
-        console.log(`🔄 Creating PaymentIntent with Payment Method: ${finalPaymentMethodId}`);
-
-        // Create the Stripe PaymentIntent
+        // ✅ FIXED CODE - Sirf yeh change karo
         const paymentIntent = await stripe.paymentIntents.create({
             amount: amount,
             currency: 'usd',
             payment_method: finalPaymentMethodId,
-            confirmation_method: 'manual',
             confirm: true,
+            automatic_payment_methods: {
+                enabled: true,
+                allow_redirects: 'never'
+            },
             description: `Order by ${customerInfo.email}`,
             metadata: {
                 browserId: browserId || 'unknown',
                 customerEmail: customerInfo.email,
-                orderItems: JSON.stringify(items.map(item => ({ 
-                    id: item.productId || item.id, 
-                    name: item.name, 
-                    qty: item.quantity 
-                })))
+                customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
             },
+            receipt_email: customerInfo.email,
             shipping: {
                 name: `${customerInfo.firstName} ${customerInfo.lastName}`,
                 address: {
                     line1: customerInfo.streetAddress1,
-                    line2: customerInfo.streetAddress2 || null,
+                    line2: customerInfo.streetAddress2 || undefined,
                     city: customerInfo.city,
                     state: customerInfo.state,
                     postal_code: customerInfo.zip,
@@ -135,27 +69,38 @@ exports.placeOrder = async (req, res) => {
             },
         });
 
-        console.log('💳 PaymentIntent created:', {
-            id: paymentIntent.id,
-            status: paymentIntent.status,
-            amount: paymentIntent.amount
-        });
+
+        console.log('💳 PaymentIntent created:', paymentIntent.id);
+        console.log('📊 Payment Status:', paymentIntent.status);
 
         if (paymentIntent.status === 'succeeded') {
-            // Create and save the order to database
+            // Calculate totals
+            const serverCalculatedSubtotal = items.reduce((sum, item) => {
+                return sum + (parseFloat(item.price) * parseInt(item.quantity));
+            }, 0);
+
+            let discountAmount = 0;
+            let finalTotal = serverCalculatedSubtotal;
+
+            if (appliedCoupon && appliedCoupon.discount) {
+                discountAmount = parseFloat(appliedCoupon.discount);
+                finalTotal -= discountAmount;
+            }
+
+            // Save order
             const newOrder = new Order({
                 customerInfo: customerInfo,
                 items: items.map(item => ({
-                    productId: item.productId || item.id || item.cartId,
+                    productId: item.productId || item.id,
                     name: item.name,
                     image: item.image,
-                    price: parseFloat(item.price) || 0,
-                    quantity: parseInt(item.quantity) || 1,
+                    price: parseFloat(item.price),
+                    quantity: parseInt(item.quantity),
                     size: item.size || undefined
                 })),
                 subtotal: serverCalculatedSubtotal,
                 discountAmount: discountAmount,
-                finalTotal: serverCalculatedFinalTotal,
+                finalTotal: finalTotal,
                 note: note || '',
                 paymentMethodId: finalPaymentMethodId,
                 paymentStatus: 'succeeded',
@@ -165,58 +110,37 @@ exports.placeOrder = async (req, res) => {
                     state: customerInfo.state,
                     city: customerInfo.city,
                     zip: customerInfo.zip
-                }
+                },
+                createdAt: new Date(),
+                orderNumber: `ORD-${Date.now()}`
             });
 
             await newOrder.save();
-            console.log('✅ Order saved to database:', newOrder._id);
+            console.log('✅ Order saved:', newOrder._id);
 
             return res.status(200).json({
                 success: true,
-                message: 'Payment successful and order placed!',
+                message: 'Payment successful!',
                 paymentId: paymentIntent.id,
                 amount: paymentIntent.amount,
-                customerEmail: customerInfo.email,
-                orderId: newOrder._id
+                orderId: newOrder._id,
+                orderNumber: newOrder.orderNumber
             });
 
-        } else if (paymentIntent.status === 'requires_action' || paymentIntent.status === 'requires_source_action') {
-            console.log('⚠️ Payment requires action:', paymentIntent.next_action);
-            return res.status(200).json({
-                success: false,
-                message: 'Payment requires additional action. Please complete the authentication.',
-                requiresAction: true,
-                clientSecret: paymentIntent.client_secret
-            });
         } else {
-            console.error('❌ Stripe PaymentIntent status:', paymentIntent.status);
+            console.error('❌ Payment not succeeded. Status:', paymentIntent.status);
             return res.status(400).json({
                 success: false,
-                message: `Payment failed with status: ${paymentIntent.status}. Please try again.`
+                message: `Payment status: ${paymentIntent.status}`
             });
         }
 
     } catch (error) {
-        console.error('❌ Error during placeOrder:', error);
-        
-        // Handle specific Stripe errors
-        if (error.type === 'StripeCardError') {
-            return res.status(400).json({
-                success: false,
-                message: error.message || 'Your card was declined. Please try a different payment method.'
-            });
-        }
-        
-        if (error.type === 'StripeInvalidRequestError') {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid payment information. Please check your details and try again.'
-            });
-        }
+        console.error('❌ Payment Error:', error.message);
 
-        return res.status(500).json({
+        return res.status(400).json({
             success: false,
-            message: error.message || 'Internal server error during checkout.'
+            message: error.message || 'Payment failed'
         });
     }
 };
@@ -226,7 +150,7 @@ exports.getAllOrders = async (req, res) => {
         const orders = await Order.find().sort({ createdAt: -1 });
         res.status(200).json({ success: true, orders });
     } catch (error) {
-        console.error('❌ Error fetching orders:', error);
+        console.error('Error fetching orders:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch orders.' });
     }
 };
@@ -240,7 +164,7 @@ exports.getOrderById = async (req, res) => {
         }
         res.status(200).json({ success: true, order });
     } catch (error) {
-        console.error('❌ Error fetching order by ID:', error);
+        console.error('Error fetching order:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch order.' });
     }
 };
