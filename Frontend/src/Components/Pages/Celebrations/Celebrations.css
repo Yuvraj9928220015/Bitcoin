@@ -1,0 +1,275 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap');
+
+:root {
+    --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --color-background: #fdfdfd;
+    --color-text-light: #f1f1f1;
+    --color-headings: #1f2937;
+    --color-paragraph: #4b5563;
+    --color-gold: #D4AF37;
+    --section-padding: clamp(3rem, 8vw, 6rem);
+    --content-padding: clamp(1rem, 5vw, 2rem);
+    --grid-gap: 1.5rem;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.CelebrationsPage {
+    overflow-x: hidden;
+    background-color: #f3f2f3;
+}
+
+/* --- Call-to-Action Button --- */
+.cta-button {
+    display: inline-block;
+    padding: 12px 32px;
+    background-color: transparent;
+    color: var(--color-text-light);
+    border: 1px solid var(--color-text-light);
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1.5px;
+    font-weight: 400;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.cta-button:hover {
+    background-color: var(--color-text-light);
+    color: #000;
+}
+
+/* --- Generic Page Section Styles --- */
+.page-section {
+    padding: 40px 0px;
+}
+
+.section-header {
+    margin-bottom: 3rem;
+    max-width: 800px;
+}
+
+.section-title {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    font-weight: 300;
+    color: var(--color-headings);
+    margin-bottom: 1rem;
+}
+
+.section-subtitle {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 300;
+    color: var(--color-headings);
+    margin-bottom: 1rem;
+}
+
+.section-description {
+    font-size: clamp(1rem, 1.5vw, 1.1rem);
+    letter-spacing: 0.5px;
+    font-weight: 300;
+    color: var(--color-paragraph);
+}
+
+.section-cta-container {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.section-cta-container .cta-button {
+    color: var(--color-headings);
+    border-color: var(--color-headings);
+}
+
+.section-cta-container .cta-button:hover {
+    background-color: var(--color-headings);
+    color: var(--color-text-light);
+}
+
+.hero-cta-btn-v5-btn {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 30px;
+    padding-bottom: 60px;
+}
+
+.hero-cta-btn-v5 a {
+    text-decoration: none;
+    color: #000;
+}
+
+/* --- Content & Image Box --- */
+.content-image-box {
+    display: flex;
+    align-items: center;
+    gap: var(--grid-gap);
+}
+
+.content-image-box.reverse {
+    flex-direction: row-reverse;
+}
+
+.content-image-visual,
+.content-image-text-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+.content-image-visual img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.content-image-text-wrapper {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.content-image-text {
+    text-align: left;
+    padding: 0 2rem;
+}
+
+/* --- Jewel Collage Section --- */
+.jewel-collage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--grid-gap);
+}
+
+.collage-column-1 {
+    display: flex;
+    flex-direction: column;
+    gap: var(--grid-gap);
+    padding-top: 130px;
+}
+
+.collage-column-2 {
+    display: flex;
+    flex-direction: column;
+    gap: var(--grid-gap);
+}
+
+.collage-image-wrapper {
+    width: 100%;
+    overflow: hidden;
+}
+
+.collage-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.collage-image-wrapper:hover img {
+    transform: scale(1.05);
+}
+
+
+.hero-cta-btn-v5 {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    text-align: start;
+    font-size: 15px;
+    letter-spacing: 1px;
+    font-weight: 500;
+    color: rgb(0, 0, 0);
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid white;
+    padding-bottom: px;
+    cursor: pointer;
+    margin-top: 15px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.hero-cta-btn-v5::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            #000000 25%,
+            rgb(0, 0, 0) 50%,
+            #000000 75%,
+            transparent 100%);
+    opacity: 0;
+}
+
+.hero-cta-btn-v5:hover::after {
+    animation: wave-sweep 1.5s ease-in-out infinite;
+}
+
+@keyframes wave-sweep {
+    0% {
+        left: -100%;
+        opacity: 0;
+    }
+
+    50% {
+        left: 0%;
+        opacity: 1;
+    }
+
+    100% {
+        left: 100%;
+        opacity: 0;
+    }
+}
+
+.hero-cta-btn-v5:hover {
+    border-bottom-color: transparent;
+}
+
+
+/* Tablet and below */
+@media (max-width: 992px) {
+    .content-image-text {
+        padding: 0 1rem;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .hero-section {
+        height: 80vh;
+    }
+
+    .content-image-box,
+    .content-image-box.reverse {
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .content-image-text {
+        text-align: center;
+        padding: 1rem 0;
+    }
+
+    .section-description {
+        text-align: justify;
+    }
+
+    .jewel-collage-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .collage-column-1 {
+        padding-top: 0;
+        /* Remove stagger on mobile */
+    }
+}

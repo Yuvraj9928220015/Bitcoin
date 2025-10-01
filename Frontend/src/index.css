@@ -1,0 +1,10 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: 'Public Sans', sans-serif;
+}
+
+body {
+  background: linear-gradient(to bottom, #f4d4a7, #e8ddd4);
+}

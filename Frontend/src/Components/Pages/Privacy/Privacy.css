@@ -1,0 +1,95 @@
+.Privacy-heading {
+    font-size: 18px;
+    letter-spacing: 1px;
+    padding: 20px 0px;
+}
+
+.Privacy-des {
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+.page-title-section {
+    background-color: var(--primary-color);
+    color: var(--light-text-color);
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 54px;
+}
+
+.page-title-section h1 {
+    font-size: 42px;
+    font-weight: 600;
+    margin: 10px 0 0 0;
+    letter-spacing: 2px;
+}
+
+.logo-placeholder-main {
+    display: inline-block;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #c5a995;
+    color: var(--primary-color);
+    font-size: 30px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    font-family: serif;
+}
+
+.Privacy {
+    padding: 80px 0;
+    background-color: #fff;
+}
+
+.Privacy-content {
+    margin: 0 auto;
+}
+
+.Privacy-heading {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding-top: 30px;
+    color: #684C22;
+    padding-bottom: 20px;
+}
+
+.Privacy-des {
+    font-size: 16px;
+    text-align: justify;
+    letter-spacing: 1px;
+    line-height: 1.7;
+    color: #684C22;
+}
+
+.Privacy-des a {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.Privacy-des a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .page-title-section h1 {
+        font-size: 32px;
+    }
+
+    .Privacy {
+        padding: 40px 0;
+    }
+
+    .Privacy-heading {
+        font-size: 20px;
+    }
+
+    .Privacy-des {
+        font-size: 16px;
+    }
+}
