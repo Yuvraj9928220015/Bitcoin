@@ -4,11 +4,20 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Checkout Session Route
 router.post('/create-checkout-session', async (req, res) => {
+    const { line_items, couponCode } = req.body;
     const { amount } = req.body;
 
     if (!amount || amount <= 0) {
         return res.status(400).send({ error: 'Invalid amount' });
     }
+
+    console.log(line_items)
+
+      const discounts = [];
+  // Only apply if user entered "Halstonbtc"
+  if (couponCode && couponCode.toLowerCase() === 'halstonbtc') {
+    discounts.push({ coupon: 'Halstonbtc' }); // ya aap DB based coupon logic use kar sakte ho
+  }
 
     try {
         const session = await stripe.checkout.sessions.create({
