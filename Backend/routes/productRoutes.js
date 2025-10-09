@@ -41,7 +41,6 @@ const fileFilter = (req, file, cb) => {
     console.log('File extension:', extname);
     console.log('File mimetype:', mimetype);
 
-    // Check if it's an image field
     if (file.fieldname === 'images') {
         const isValidImage = imageTypes.test(extname) && mimetype.startsWith('image/');
 
@@ -54,7 +53,6 @@ const fileFilter = (req, file, cb) => {
         }
     }
 
-    // Check if it's a video field
     if (file.fieldname === 'video') {
         const isValidVideo = videoTypes.test(extname) && mimetype.startsWith('video/');
 
@@ -128,23 +126,30 @@ const handleUpload = (req, res, next) => {
     });
 };
 
-// Debug middleware to log request details
+// Debug middleware - FIXED: Only logs after multer parses body
 const debugMiddleware = (req, res, next) => {
     console.log('=== Request Debug Info ===');
     console.log('Method:', req.method);
     console.log('URL:', req.url);
     console.log('Body:', req.body);
     console.log('Files:', req.files);
-    console.log('Stock in body:', req.body.stock, 'Type:', typeof req.body.stock);
+    
+    if (req.body) {
+        console.log('Title:', req.body.title);
+        console.log('Price:', req.body.price);
+        console.log('Gold Price:', req.body.goldPrice);
+        console.log('Category:', req.body.category);
+    }
+    
     console.log('========================');
     next();
 };
 
-// Routes
+// Routes - handleUpload FIRST, then debugMiddleware
 router.get('/', getProducts);
 router.get('/:id', getProductById);
-router.post('/', debugMiddleware, handleUpload, addProduct);
-router.put('/:id', debugMiddleware, handleUpload, updateProduct);
+router.post('/', handleUpload, debugMiddleware, addProduct);
+router.put('/:id', handleUpload, debugMiddleware, updateProduct);
 router.delete('/:id', deleteProduct);
 
 // Error handling middleware
