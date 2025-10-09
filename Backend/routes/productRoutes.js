@@ -23,7 +23,6 @@ const storage = multer.diskStorage({
         cb(null, './uploads/');
     },
     filename: function (req, file, cb) {
-        // Create unique filename with timestamp
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
@@ -33,11 +32,8 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
     console.log('File being processed:', file);
 
-    // Define allowed file types
     const imageTypes = /jpeg|jpg|png|gif|webp/;
     const videoTypes = /mp4|mov|avi|wmv|mkv|flv|webm/;
-    const allTypes = /jpeg|jpg|png|gif|webp|mp4|mov|avi|wmv|mkv|flv|webm/;
-    
 
     const extname = path.extname(file.originalname).toLowerCase();
     const mimetype = file.mimetype;
@@ -47,8 +43,7 @@ const fileFilter = (req, file, cb) => {
 
     // Check if it's an image field
     if (file.fieldname === 'images') {
-        const isValidImage = imageTypes.test(extname) &&
-            (mimetype.startsWith('image/'));
+        const isValidImage = imageTypes.test(extname) && mimetype.startsWith('image/');
 
         if (isValidImage) {
             console.log('Valid image file accepted');
@@ -61,8 +56,7 @@ const fileFilter = (req, file, cb) => {
 
     // Check if it's a video field
     if (file.fieldname === 'video') {
-        const isValidVideo = videoTypes.test(extname) &&
-            (mimetype.startsWith('video/'));
+        const isValidVideo = videoTypes.test(extname) && mimetype.startsWith('video/');
 
         if (isValidVideo) {
             console.log('Valid video file accepted');
@@ -73,7 +67,6 @@ const fileFilter = (req, file, cb) => {
         }
     }
 
-    // If we get here, it's an unknown field or invalid file
     console.log('Unknown file field or invalid file type');
     cb(new Error('Invalid file type or field name'));
 };
@@ -84,7 +77,7 @@ const upload = multer({
     fileFilter: fileFilter,
     limits: {
         fileSize: 100 * 1024 * 1024,
-        files: 11 // 10 images + 1 video max
+        files: 11
     }
 }).fields([
     { name: 'images', maxCount: 10 },
@@ -125,7 +118,6 @@ const handleUpload = (req, res, next) => {
                 });
             }
 
-            // Custom error (from fileFilter or other sources)
             return res.status(400).json({
                 message: err.message || 'File upload error'
             });
@@ -141,9 +133,9 @@ const debugMiddleware = (req, res, next) => {
     console.log('=== Request Debug Info ===');
     console.log('Method:', req.method);
     console.log('URL:', req.url);
-    console.log('Headers:', req.headers);
     console.log('Body:', req.body);
     console.log('Files:', req.files);
+    console.log('Stock in body:', req.body.stock, 'Type:', typeof req.body.stock);
     console.log('========================');
     next();
 };
@@ -151,11 +143,8 @@ const debugMiddleware = (req, res, next) => {
 // Routes
 router.get('/', getProducts);
 router.get('/:id', getProductById);
-
-// Add debug middleware for POST and PUT routes
 router.post('/', debugMiddleware, handleUpload, addProduct);
 router.put('/:id', debugMiddleware, handleUpload, updateProduct);
-
 router.delete('/:id', deleteProduct);
 
 // Error handling middleware

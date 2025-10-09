@@ -1,3 +1,4 @@
+// controllers/orderController.js
 const Order = require('../models/Order');
 const Coupon = require('../models/CouponModel');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -14,12 +15,11 @@ exports.placeOrder = async (req, res) => {
             items,
             customerInfo,
             note,
-            appliedCoupon
+            appliedCoupons
         } = req.body;
 
         const finalPaymentMethodId = paymentMethodId || id;
 
-        // Validation
         if (!amount || amount <= 0) {
             return res.status(400).json({ success: false, message: 'Invalid amount.' });
         }
@@ -36,96 +36,105 @@ exports.placeOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Customer info required.' });
         }
 
-        // Calculate server-side subtotal
-        const serverCalculatedSubtotal = items.reduce((sum, item) => {
+        let serverCalculatedSubtotal = items.reduce((sum, item) => {
             return sum + (parseFloat(item.price) * parseInt(item.quantity));
         }, 0);
 
-        console.log("Order Amount (frontend):", orderAmount);
-        console.log("Server Subtotal:", serverCalculatedSubtotal);
+        const originalSubtotal = serverCalculatedSubtotal;
+        console.log("Order Amount (frontend):", (amount / 100).toFixed(2));
+        console.log("Server Original Subtotal:", originalSubtotal.toFixed(2));
 
-        // Validate and apply coupon on backend
-        let discountAmount = 0;
-        let validatedCoupon = null;
+        let totalDiscountAmount = 0;
+        const appliedValidCoupons = [];
 
-        if (appliedCoupon && appliedCoupon.code) {
-            try {
-                const coupon = await Coupon.findOne({
-                    code: appliedCoupon.code.toUpperCase(),
-                    isActive: true
-                });
+        if (appliedCoupons && appliedCoupons.length > 0) {
+            console.log(`Attempting to apply ${appliedCoupons.length} coupons: ${appliedCoupons.join(', ')}`);
 
-                if (coupon) {
-                    // Check if expired
-                    if (coupon.expiryDate && new Date() > coupon.expiryDate) {
-                        return res.status(400).json({
-                            success: false,
-                            message: 'Coupon has expired'
-                        });
+            const couponDocs = await Coupon.find({
+                code: { $in: appliedCoupons.map(c => c.toUpperCase()) },
+                isActive: true
+            });
+
+            const percentageCoupons = couponDocs
+                .filter(c => c.discountType === 'percentage')
+                .sort((a, b) => b.discountValue - a.discountValue);
+
+            const fixedCoupons = couponDocs
+                .filter(c => c.discountType === 'fixed')
+                .sort((a, b) => b.discountValue - a.discountValue);
+
+            const sortedCouponsToApply = [...percentageCoupons, ...fixedCoupons];
+
+            for (const coupon of sortedCouponsToApply) {
+                try {
+
+                    const latestCoupon = await Coupon.findById(coupon._id);
+
+                    if (!latestCoupon) {
+                        console.warn(`❌ Coupon code not found (after initial fetch) and skipped: ${coupon.code}`);
+                        continue;
                     }
 
-                    // Check usage limit
-                    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
-                        return res.status(400).json({
-                            success: false,
-                            message: 'Coupon usage limit reached'
-                        });
+                    if (latestCoupon.expiryDate && new Date() > latestCoupon.expiryDate) {
+                        console.warn(`❌ Expired coupon skipped: ${latestCoupon.code}`);
+                        continue;
                     }
 
-                    // Check minimum order amount
-                    if (serverCalculatedSubtotal < coupon.minOrderAmount) {
-                        return res.status(400).json({
-                            success: false,
-                            message: `Minimum order amount of $${coupon.minOrderAmount} required`
-                        });
+                    if (latestCoupon.usageLimit && latestCoupon.usedCount >= latestCoupon.usageLimit) {
+                        console.warn(`❌ Coupon usage limit reached for: ${latestCoupon.code}`);
+                        continue;
                     }
 
-                    // Calculate discount
-                    if (coupon.discountType === 'percentage') {
-                        discountAmount = (serverCalculatedSubtotal * coupon.discountValue) / 100;
+                    if (serverCalculatedSubtotal < latestCoupon.minOrderAmount) {
+                        console.warn(`❌ Min order amount not met for ${latestCoupon.code}. Required: $${latestCoupon.minOrderAmount.toFixed(2)}, Current: $${serverCalculatedSubtotal.toFixed(2)}`);
+                        continue;
+                    }
 
-                        // Apply max discount cap if exists
-                        if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
-                            discountAmount = coupon.maxDiscountAmount;
+                    let currentCouponDiscount = 0;
+                    if (latestCoupon.discountType === 'percentage') {
+                        currentCouponDiscount = (serverCalculatedSubtotal * latestCoupon.discountValue) / 100;
+
+                        if (latestCoupon.maxDiscountAmount && currentCouponDiscount > latestCoupon.maxDiscountAmount) {
+                            console.log(`  - ${latestCoupon.code}: Capped percentage discount from $${currentCouponDiscount.toFixed(2)} to max $${latestCoupon.maxDiscountAmount.toFixed(2)}`);
+                            currentCouponDiscount = latestCoupon.maxDiscountAmount;
                         }
-                    } else if (coupon.discountType === 'fixed') {
-                        discountAmount = Math.min(coupon.discountValue, serverCalculatedSubtotal);
+                    } else if (latestCoupon.discountType === 'fixed') {
+                        currentCouponDiscount = latestCoupon.discountValue;
                     }
 
-                    validatedCoupon = {
-                        code: coupon.code,
-                        discountType: coupon.discountType,
-                        discountValue: coupon.discountValue,
-                        discountAmount: discountAmount
-                    };
+                    currentCouponDiscount = Math.min(currentCouponDiscount, serverCalculatedSubtotal);
 
-                    console.log('✅ Coupon validated:', validatedCoupon);
-                } else {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Invalid coupon code'
-                    });
+                    if (currentCouponDiscount > 0) {
+                        totalDiscountAmount += currentCouponDiscount;
+                        serverCalculatedSubtotal -= currentCouponDiscount;
+                        appliedValidCoupons.push({
+                            code: latestCoupon.code,
+                            discountType: latestCoupon.discountType,
+                            discountValue: latestCoupon.discountValue,
+                            discountAmount: currentCouponDiscount
+                        });
+                        console.log(`✅ Coupon applied: ${latestCoupon.code}, Discount: $${currentCouponDiscount.toFixed(2)}, New Running Total: $${serverCalculatedSubtotal.toFixed(2)}`);
+                    } else {
+                        console.warn(`  - ${latestCoupon.code}: No discount applied (either 0 or invalid conditions).`);
+                    }
+
+                } catch (couponError) {
+                    console.error('Error validating or applying coupon:', coupon.code, couponError.message);
+                    continue;
                 }
-            } catch (couponError) {
-                console.error('Error validating coupon:', couponError);
-                return res.status(400).json({
-                    success: false,
-                    message: 'Error validating coupon'
-                });
             }
         }
 
-        // Calculate final total
-        const finalTotal = serverCalculatedSubtotal - discountAmount;
+        const finalTotal = serverCalculatedSubtotal;
         const finalAmountInCents = Math.round(finalTotal * 100);
 
-        console.log('💵 Final amount after discount:', finalTotal);
-        console.log('💳 Amount in cents:', finalAmountInCents);
+        console.log('💵 Final amount after all discounts:', finalTotal.toFixed(2));
+        console.log('💳 Amount in cents for Stripe:', finalAmountInCents);
 
-        // Verify amount matches what frontend sent
-        if (Math.abs(amount - finalAmountInCents) > 1) {
-            console.warn('⚠️ Amount mismatch! Frontend:', amount, 'Backend:', finalAmountInCents);
+        if (Math.abs(amount - finalAmountInCents) > 10) {
+            console.warn(`⚠️ Frontend amount mismatch! Frontend: ${amount}, Backend Calculated: ${finalAmountInCents}. Using backend calculated amount for Stripe.`);
         }
+
 
         console.log('✅ Validation passed');
         console.log('💳 Creating PaymentIntent...');
@@ -144,8 +153,8 @@ exports.placeOrder = async (req, res) => {
                 browserId: browserId || 'unknown',
                 customerEmail: customerInfo.email,
                 customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
-                couponCode: validatedCoupon ? validatedCoupon.code : 'none',
-                discountAmount: discountAmount.toFixed(2)
+                couponCodes: appliedValidCoupons.map(c => c.code).join(',') || 'none',
+                totalDiscountAmount: totalDiscountAmount.toFixed(2)
             },
             receipt_email: customerInfo.email,
             shipping: {
@@ -166,7 +175,6 @@ exports.placeOrder = async (req, res) => {
         console.log('📊 Payment Status:', paymentIntent.status);
 
         if (paymentIntent.status === 'succeeded') {
-            // Save order
             const newOrder = new Order({
                 customerInfo: customerInfo,
                 items: items.map(item => ({
@@ -177,14 +185,15 @@ exports.placeOrder = async (req, res) => {
                     quantity: parseInt(item.quantity),
                     size: item.size || undefined
                 })),
-                subtotal: serverCalculatedSubtotal,
-                discountAmount: discountAmount,
+                subtotal: originalSubtotal,
+                discountAmount: totalDiscountAmount,
                 finalTotal: finalTotal,
                 note: note || '',
                 paymentMethodId: finalPaymentMethodId,
                 paymentStatus: 'succeeded',
                 stripeChargeId: paymentIntent.id,
-                couponUsed: validatedCoupon ? validatedCoupon.code : null,
+                couponUsed: appliedValidCoupons.map(c => c.code).join(', ') || null,
+                appliedDiscountsDetails: appliedValidCoupons,
                 shippingDetails: {
                     country: customerInfo.country || 'US',
                     state: customerInfo.state,
@@ -198,13 +207,12 @@ exports.placeOrder = async (req, res) => {
             await newOrder.save();
             console.log('✅ Order saved:', newOrder._id);
 
-            // Increment coupon usage count
-            if (validatedCoupon) {
+            for (const validCoupon of appliedValidCoupons) {
                 await Coupon.findOneAndUpdate(
-                    { code: validatedCoupon.code },
+                    { code: validCoupon.code },
                     { $inc: { usedCount: 1 } }
                 );
-                console.log('✅ Coupon usage incremented');
+                console.log(`✅ Coupon usage incremented for: ${validCoupon.code}`);
             }
 
             return res.status(200).json({
@@ -215,10 +223,7 @@ exports.placeOrder = async (req, res) => {
                 orderId: newOrder._id,
                 orderNumber: newOrder.orderNumber,
                 customerEmail: customerInfo.email,
-                appliedDiscount: discountAmount > 0 ? {
-                    code: validatedCoupon.code,
-                    amount: discountAmount
-                } : null
+                appliedDiscounts: appliedValidCoupons
             });
 
         } else {
@@ -231,7 +236,6 @@ exports.placeOrder = async (req, res) => {
 
     } catch (error) {
         console.error('❌ Payment Error:', error.message);
-
         return res.status(400).json({
             success: false,
             message: error.message || 'Payment failed'

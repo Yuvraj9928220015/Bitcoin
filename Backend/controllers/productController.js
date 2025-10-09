@@ -64,7 +64,6 @@ exports.getProducts = async (req, res) => {
 // Get single product by ID
 exports.getProductById = async (req, res) => {
     try {
-        
         const product = await Product.findById(req.params.id);
         if (!product) {
             return res.status(404).json({ 
@@ -97,17 +96,21 @@ exports.addProduct = async (req, res) => {
         console.log('Request files:', req.files);
 
         const { title, price, goldPrice, category, description } = req.body;
+        // CRITICAL: Get stock value directly from req.body and handle it carefully
+        const rawStock = req.body.stock; 
+        
         const images = req.files?.images || [];
         const video = req.files?.video && req.files.video.length > 0 ? req.files.video[0] : null;
 
         console.log('Images:', images);
         console.log('Video:', video);
+        console.log('Stock received (raw):', rawStock, 'Type:', typeof rawStock);
 
-        // Validation
-        if (!title || !price || !goldPrice || !category || !description) {
+        // Validation - Check if stock is provided and is a valid number
+        if (!title || !price || !goldPrice || !category || !description || rawStock === undefined || rawStock === null || rawStock === '') {
             deleteFilesOnError(req.files);
             return res.status(400).json({ 
-                message: 'Please fill all required fields: title, silver price, gold price, category, and description.' 
+                message: 'Please fill all required fields: title, silver price, gold price, category, description, and stock.' 
             });
         }
 
@@ -118,22 +121,30 @@ exports.addProduct = async (req, res) => {
             });
         }
 
-        // Validate price values
+        // Validate and parse price and stock values
         const silverPrice = parseFloat(price);
         const goldPriceValue = parseFloat(goldPrice);
-        
-        if (isNaN(silverPrice) || silverPrice <= 0) {
+        // Correctly parse stock value
+        const stockValue = parseInt(rawStock, 10); 
+
+        if (isNaN(silverPrice) || silverPrice < 0) {
             deleteFilesOnError(req.files);
             return res.status(400).json({ 
-                // 
-                message: 'Please provide a valid silver price.' 
+                message: 'Please provide a valid silver price (0 or greater).' 
             });
         }
         
-        if (isNaN(goldPriceValue) || goldPriceValue <= 0) {
+        if (isNaN(goldPriceValue) || goldPriceValue < 0) {
             deleteFilesOnError(req.files);
             return res.status(400).json({ 
-                message: 'Please provide a valid gold price.' 
+                message: 'Please provide a valid gold price (0 or greater).' 
+            });
+        }
+
+        if (isNaN(stockValue) || stockValue < 0) {
+            deleteFilesOnError(req.files);
+            return res.status(400).json({ 
+                message: 'Please provide a valid stock quantity (0 or greater).' 
             });
         }
 
@@ -142,6 +153,7 @@ exports.addProduct = async (req, res) => {
 
         console.log('Image paths:', imagePaths);
         console.log('Video path:', videoPath);
+        console.log('Stock value to save:', stockValue); // This is now guaranteed an integer
 
         const newProduct = new Product({
             sessionId: req.sessionID,
@@ -150,6 +162,7 @@ exports.addProduct = async (req, res) => {
             description: description.trim(),
             price: silverPrice,
             goldPrice: goldPriceValue,
+            stock: stockValue, // Assign the parsed integer value
             image: imagePaths,
             video: videoPath
         });
@@ -184,13 +197,19 @@ exports.addProduct = async (req, res) => {
 // Update product
 exports.updateProduct = async (req, res) => {
     try {
+        console.log('=== UPDATE PRODUCT START ===');
         console.log('Update request body:', req.body);
         console.log('Update request files:', req.files);
 
         const { title, price, goldPrice, category, description } = req.body;
+        // CRITICAL: Get raw stock value directly from req.body
+        const rawStock = req.body.stock; 
+        
         const imageOrder = req.body.imageOrder ? JSON.parse(req.body.imageOrder) : [];
         const newImageFiles = req.files?.images || [];
         const newVideoFile = req.files?.video && req.files.video.length > 0 ? req.files.video[0] : null;
+
+        console.log('Stock received for update (raw):', rawStock, 'Type:', typeof rawStock);
 
         const product = await Product.findById(req.params.id);
 
@@ -201,7 +220,9 @@ exports.updateProduct = async (req, res) => {
             });
         }
 
-        // Handle image updates
+        console.log('Current product stock before update:', product.stock);
+
+        // Handle image updates (rest of this section remains the same)
         let newFileIndex = 0;
         const finalImagePaths = imageOrder.length > 0 
             ? imageOrder.map(item => {
@@ -225,7 +246,7 @@ exports.updateProduct = async (req, res) => {
             deleteFile(imgPath);
         });
 
-        // Handle video updates
+        // Handle video updates (rest of this section remains the same)
         let finalVideoPath = product.video;
         const oldVideoPath = product.video;
 
@@ -244,51 +265,112 @@ exports.updateProduct = async (req, res) => {
             }
         }
 
-        // Validate prices if provided
-        let silverPrice = product.price;
-        let goldPriceValue = product.goldPrice;
-        
-        if (price && price !== '') {
-            silverPrice = parseFloat(price);
-            if (isNaN(silverPrice) || silverPrice <= 0) {
-                deleteFilesOnError(req.files);
-                return res.status(400).json({ 
-                    message: 'Please provide a valid silver price.' 
-                });
-            }
-        }
-        
-        if (goldPrice && goldPrice !== '') {
-            goldPriceValue = parseFloat(goldPrice);
-            if (isNaN(goldPriceValue) || goldPriceValue <= 0) {
-                deleteFilesOnError(req.files);
-                return res.status(400).json({ 
-                    message: 'Please provide a valid gold price.' 
-                });
-            }
+        // Update fields - Initialize with current values from the product object
+        let updatedFields = {
+            title: product.title,
+            price: product.price,
+            goldPrice: product.goldPrice,
+            stock: product.stock, // Start with existing stock
+            category: product.category,
+            description: product.description,
+            image: finalImagePaths,
+            video: finalVideoPath
+        };
+
+        // Update title if provided
+        if (title !== undefined && title.trim() !== '') {
+            updatedFields.title = title.trim();
         }
 
-        // Update product fields
-        product.title = title && title.trim() !== '' ? title.trim() : product.title;
-        product.price = silverPrice;
-        product.goldPrice = goldPriceValue;
-        product.category = category && category.trim() !== '' ? category.trim() : product.category;
-        product.description = description && description.trim() !== '' ? description.trim() : product.description;
-        product.image = finalImagePaths;
-        product.video = finalVideoPath;
+        // Update price if provided
+        if (price !== undefined) {
+            const silverPrice = parseFloat(price);
+            if (isNaN(silverPrice) || silverPrice < 0) {
+                deleteFilesOnError(req.files);
+                return res.status(400).json({ 
+                    message: 'Please provide a valid silver price (0 or greater).' 
+                });
+            }
+            updatedFields.price = silverPrice;
+        }
+
+        // Update gold price if provided
+        if (goldPrice !== undefined) {
+            const goldPriceValue = parseFloat(goldPrice);
+            if (isNaN(goldPriceValue) || goldPriceValue < 0) {
+                deleteFilesOnError(req.files);
+                return res.status(400).json({ 
+                    message: 'Please provide a valid gold price (0 or greater).' 
+                });
+            }
+            updatedFields.goldPrice = goldPriceValue;
+        }
+
+        // CRITICAL FIX: Stock update - Always process stock if it's in the request body
+        // Ensure rawStock is not null, undefined or empty string before parsing
+        if (rawStock !== undefined && rawStock !== null) { // Check for undefined and null
+            let parsedStock;
+            if (rawStock === '') { // If empty string, treat as 0
+                parsedStock = 0;
+            } else {
+                parsedStock = parseInt(rawStock, 10);
+            }
+
+            console.log('Parsed stock value:', parsedStock);
+            
+            if (isNaN(parsedStock) || parsedStock < 0) {
+                deleteFilesOnError(req.files);
+                return res.status(400).json({ 
+                    message: 'Please provide a valid stock quantity (0 or greater).' 
+                });
+            }
+            updatedFields.stock = parsedStock; // Assign the parsed integer value
+            console.log('Stock will be updated to:', parsedStock);
+        }
+
+
+        // Update category if provided
+        if (category !== undefined && category.trim() !== '') {
+            updatedFields.category = category.trim();
+        }
+
+        // Update description if provided
+        if (description !== undefined && description.trim() !== '') {
+            updatedFields.description = description.trim();
+        }
 
         // Ensure product has at least one image
-        if (product.image.length === 0) {
+        if (updatedFields.image.length === 0) {
             deleteFilesOnError(req.files);
             return res.status(400).json({ 
                 message: "Product must have at least one image." 
             });
         }
 
-        console.log('Final video path before save:', product.video);
+        console.log('Fields to update:', updatedFields);
+        console.log('Stock field specifically:', updatedFields.stock, 'Type:', typeof updatedFields.stock);
 
-        const updatedProduct = await product.save();
-        console.log('Product updated successfully:', updatedProduct);
+        // Use findByIdAndUpdate to ensure the update happens
+        const updatedProduct = await Product.findByIdAndUpdate(
+            req.params.id,
+            { $set: updatedFields }, // Use $set to update specific fields
+            { 
+                new: true,           // Return the updated document
+                runValidators: true, // Run model validators
+                overwrite: false     // Important: Do not overwrite the entire document, only specified fields
+            }
+        );
+
+        if (!updatedProduct) {
+            return res.status(404).json({ 
+                message: 'Product not found after update' 
+            });
+        }
+
+        console.log('=== UPDATE SUCCESSFUL ===');
+        console.log('Product after update:', updatedProduct);
+        console.log('Updated stock value:', updatedProduct.stock, 'Type:', typeof updatedProduct.stock);
+        console.log('========================');
         
         res.status(200).json({
             message: 'Product updated successfully',

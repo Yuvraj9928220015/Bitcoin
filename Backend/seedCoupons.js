@@ -1,4 +1,3 @@
-// seedCoupons.js - Run this once to add coupons to database
 const mongoose = require('mongoose');
 const Coupon = require('./models/CouponModel');
 require('dotenv').config();
@@ -10,37 +9,69 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log('✅ MongoDB Connected'))
 .catch(err => console.error('❌ MongoDB Error:', err));
 
-const coupons = [
+const couponsToSeed = [
     {
-        code: 'Halstonbtc',
+        code: 'HALSTONBTC', // 10% off
         discountType: 'percentage',
         discountValue: 10,
         minOrderAmount: 0,
         maxDiscountAmount: null,
-        expiryDate: null, // No expiry
-        usageLimit: null, // Unlimited usage
+        expiryDate: null,
+        usageLimit: null,
         isActive: true,
-        description: 'Special 10% discount'
+        description: 'Special 10% discount for Halstonbtc'
+    },
+    {
+        code: 'BIGSAVE',
+        discountType: 'percentage',
+        discountValue: 25,
+        minOrderAmount: 100,
+        maxDiscountAmount: 40,
+        expiryDate: null,
+        usageLimit: null,
+        isActive: true,
+        description: '25% off with max $40 discount on orders over $100'
+    },
+    {
+        code: 'WELCOME15', // 15% off for new customers, single use
+        discountType: 'percentage',
+        discountValue: 15,
+        minOrderAmount: 25,
+        maxDiscountAmount: 25,
+        expiryDate: null,
+        usageLimit: 1,
+        isActive: true,
+        description: '15% off for new customers (one-time use, max $25)'
+    },
+    {
+        code: 'FREESHIP', // Fixed $5 off as a "free shipping" equivalent
+        discountType: 'fixed',
+        discountValue: 5,
+        minOrderAmount: 30,
+        maxDiscountAmount: null,
+        expiryDate: null,
+        usageLimit: null,
+        isActive: true,
+        description: 'Fixed $5 discount on orders over $30 (can be used for shipping)'
     }
 ];
 
 async function seedCoupons() {
     try {
-        // Delete existing coupons (optional)
+        console.log('Starting coupon seeding process...');
         await Coupon.deleteMany({});
-        console.log('🗑️  Existing coupons deleted');
+        console.log('🗑️ Existing coupons deleted.');
 
-        // Insert new coupons
-        await Coupon.insertMany(coupons);
+        await Coupon.insertMany(couponsToSeed);
         console.log('✅ Coupons added successfully!');
-        
-        // Display added coupons
+
         const allCoupons = await Coupon.find();
-        console.log('\n📋 All Coupons:');
+        console.log('\n📋 All Coupons in Database:');
         allCoupons.forEach(coupon => {
-            console.log(`- ${coupon.code}: ${coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '$' + coupon.discountValue} off`);
+            console.log(`- Code: ${coupon.code}, Type: ${coupon.discountType}, Value: ${coupon.discountValue}, Min Order: ${coupon.minOrderAmount}, Max Discount: ${coupon.maxDiscountAmount || 'N/A'}, Expiry: ${coupon.expiryDate ? coupon.expiryDate.toLocaleDateString() : 'N/A'}, Used: ${coupon.usedCount}/${coupon.usageLimit || 'Unlimited'}, Active: ${coupon.isActive}`);
         });
 
+        console.log('Coupon seeding complete.');
         process.exit(0);
     } catch (error) {
         console.error('❌ Error seeding coupons:', error);

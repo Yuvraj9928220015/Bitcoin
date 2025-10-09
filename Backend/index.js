@@ -15,6 +15,7 @@ dotenv.config();
 
 const app = express();
 
+// const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Bitcoine";
 const MONGO_URL = "mongodb://bituser:Bitcoinbutik%402111@93.127.172.98:27017/Bitcoine?authSource=Bitcoine";
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_for_jwt_change_in_production';
 const PORT = process.env.PORT || 9000;

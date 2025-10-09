@@ -16,7 +16,7 @@ router.post('/create-checkout-session', async (req, res) => {
       const discounts = [];
   // Only apply if user entered "Halstonbtc"
   if (couponCode && couponCode.toLowerCase() === 'halstonbtc') {
-    discounts.push({ coupon: 'Halstonbtc' }); // ya aap DB based coupon logic use kar sakte ho
+    discounts.push({ coupon: 'Halstonbtc' });
   }
 
     try {
