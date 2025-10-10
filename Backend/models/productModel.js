@@ -28,6 +28,12 @@ const productSchema = new mongoose.Schema({
         required: [true, 'Please add a gold price'],
         min: [0, 'Gold price cannot be negative']
     },
+    stock: {
+        type: Number,
+        required: [true, 'Please add stock quantity'],
+        min: [0, 'Stock cannot be negative'],
+        default: 0
+    },
     image: {
         type: [String],
         required: [true, 'Please add at least one image'],
@@ -44,4 +50,6 @@ const productSchema = new mongoose.Schema({
 productSchema.index({ category: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ goldPrice: 1 });
+productSchema.index({ stock: 1 });
+
 module.exports = mongoose.model('Product', productSchema);
