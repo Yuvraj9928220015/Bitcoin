@@ -1,3 +1,4 @@
+// server.js - COMPLETE WITH BITCOIN PAYMENT INTEGRATION
 const dotenv = require('dotenv');
 const express = require('express');
 const mongoose = require('mongoose');
@@ -15,7 +16,6 @@ dotenv.config();
 
 const app = express();
 
-// const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Bitcoine";
 const MONGO_URL = "mongodb://bituser:Bitcoinbutik%402111@93.127.172.98:27017/Bitcoine?authSource=Bitcoine";
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_for_jwt_change_in_production';
 const PORT = process.env.PORT || 9000;
@@ -37,7 +37,9 @@ app.use(cors({
         'Content-Type',
         'Authorization',
         'X-Browser-ID',
-        'X-Requested-With'
+        'X-Requested-With',
+        'x-cc-webhook-signature',
+        'x-nowpayments-sig'
     ],
     exposedHeaders: ['X-Browser-ID']
 }));
@@ -56,7 +58,7 @@ mongoose.connect(MONGO_URL)
     .catch(error => console.error("❌ Database Connection Error:", error));
 
 const Register = require('./models/Register');
-const Coupon = require('./models/CouponModel'); // Import Coupon model
+const Coupon = require('./models/CouponModel');
 
 const userSchema = new mongoose.Schema({
     title: { type: String },
@@ -98,6 +100,8 @@ app.use(session({
     name: 'bitcoine.browser.session'
 }));
 
+
+
 app.use((req, res, next) => {
     req.browserInfo = {
         userAgent: req.headers['user-agent'] || '',
@@ -137,9 +141,10 @@ const checkoutRoutes = require('./routes/checkoutRoutes');
 const registerAuthRoutes = require('./routes/RegisterRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const couponRoutes = require('./routes/couponRouter');
+const bitcoinRoutes = require('./routes/bitcoinRoutes'); // ✅ BITCOIN ROUTES
 
 // Basic Routes
-app.get('/', (req, res) => res.send('Bitcoine API is running - LIVE Stripe Integration Active!'));
+app.get('/', (req, res) => res.send('Bitcoine API is running'));
 
 app.get('/health', (req, res) => {
     res.json({
@@ -148,6 +153,13 @@ app.get('/health', (req, res) => {
         session: req.session ? 'Active' : 'Inactive',
         cartSystem: 'Browser-Specific',
         stripeConfigured: !!process.env.STRIPE_SECRET_KEY,
+        bitcoinGateways: {
+            opennode: !!process.env.OPENNODE_API_KEY,
+            nowpayments: !!process.env.NOWPAYMENTS_API_KEY,
+            coinbase: !!process.env.COINBASE_COMMERCE_API_KEY,
+            coingate: !!process.env.COINGATE_API_KEY,
+            btcpay: !!process.env.BTCPAY_API_KEY
+        },
         couponsActive: true,
         timestamp: new Date().toISOString()
     });
@@ -280,12 +292,12 @@ app.get('/api/contact-info', (req, res) => {
 });
 
 // ============================================
-// PAYMENT ROUTE WITH COUPON SUPPORT
+// STRIPE PAYMENT ROUTE WITH COUPON SUPPORT
 // ============================================
 app.post("/api/payment", async (req, res) => {
     let { amount, id, paymentMethodId, browserId, customerInfo, items, note, appliedCoupon } = req.body;
 
-    console.log("=== PAYMENT REQUEST ===");
+    console.log("=== STRIPE PAYMENT REQUEST ===");
     console.log("Amount:", amount);
     console.log("Applied Coupon:", appliedCoupon);
 
@@ -306,14 +318,12 @@ app.post("/api/payment", async (req, res) => {
     }
 
     try {
-        // Calculate subtotal from items
         const serverCalculatedSubtotal = items.reduce((sum, item) => {
             return sum + (parseFloat(item.price) * parseInt(item.quantity));
         }, 0);
 
         console.log("Server subtotal:", serverCalculatedSubtotal);
 
-        // Validate coupon on backend
         let discountAmount = 0;
         let validatedCoupon = null;
 
@@ -326,7 +336,6 @@ app.post("/api/payment", async (req, res) => {
             });
 
             if (coupon) {
-                // Check expiry
                 if (coupon.expiryDate && new Date() > coupon.expiryDate) {
                     return res.status(400).json({
                         success: false,
@@ -334,7 +343,6 @@ app.post("/api/payment", async (req, res) => {
                     });
                 }
 
-                // Check usage limit
                 if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
                     return res.status(400).json({
                         success: false,
@@ -342,7 +350,6 @@ app.post("/api/payment", async (req, res) => {
                     });
                 }
 
-                // Check minimum order
                 if (serverCalculatedSubtotal < coupon.minOrderAmount) {
                     return res.status(400).json({
                         success: false,
@@ -350,7 +357,6 @@ app.post("/api/payment", async (req, res) => {
                     });
                 }
 
-                // Calculate discount
                 if (coupon.discountType === 'percentage') {
                     discountAmount = (serverCalculatedSubtotal * coupon.discountValue) / 100;
                     if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
@@ -369,7 +375,6 @@ app.post("/api/payment", async (req, res) => {
 
                 console.log("✅ Coupon validated:", validatedCoupon);
 
-                // Increment usage count
                 await Coupon.findOneAndUpdate(
                     { code: coupon.code },
                     { $inc: { usedCount: 1 } }
@@ -377,7 +382,6 @@ app.post("/api/payment", async (req, res) => {
             }
         }
 
-        // Recalculate final amount with discount
         const finalTotal = serverCalculatedSubtotal - discountAmount;
         const finalAmountInCents = Math.round(finalTotal * 100);
 
@@ -390,7 +394,7 @@ app.post("/api/payment", async (req, res) => {
             description: `Bitcoine Jewelry - ${customerInfo?.email}`,
             payment_method: finalPaymentMethodId,
             confirm: true,
-            return_url: "http://localhost:5173/payment-success",
+            return_url: "https://bitcoinbutik.com/payment-success",
             metadata: {
                 browserId: browserId || 'unknown',
                 customerName: `${customerInfo?.firstName} ${customerInfo?.lastName}`,
@@ -402,11 +406,9 @@ app.post("/api/payment", async (req, res) => {
             receipt_email: customerInfo?.email || null
         });
 
-        console.log("✅ PAYMENT SUCCESSFUL!");
+        console.log("✅ STRIPE PAYMENT SUCCESSFUL!");
         console.log("Payment ID:", payment.id);
-        console.log("Amount charged:", finalAmountInCents / 100);
 
-        // Send confirmation email
         if (transporter && customerInfo?.email) {
             try {
                 await transporter.sendMail({
@@ -417,8 +419,8 @@ app.post("/api/payment", async (req, res) => {
                     html: `
                         <h2>Thank you for your order!</h2>
                         <p>Dear ${customerInfo.firstName} ${customerInfo.lastName},</p>
-                        <p>Payment: <strong>$${(finalAmountInCents / 100).toFixed(2)}</strong></p>
-                        ${validatedCoupon ? `<p>Discount (${validatedCoupon.code}): -$${discountAmount.toFixed(2)}</p>` : ''}
+                        <p>Payment: <strong>${(finalAmountInCents / 100).toFixed(2)}</strong></p>
+                        ${validatedCoupon ? `<p>Discount (${validatedCoupon.code}): -${discountAmount.toFixed(2)}</p>` : ''}
                         <p>Payment ID: ${payment.id}</p>
                         <p>Status: Confirmed</p>
                     `
@@ -434,6 +436,7 @@ app.post("/api/payment", async (req, res) => {
             success: true,
             paymentId: payment.id,
             amount: finalAmountInCents,
+            customerEmail: customerInfo?.email,
             appliedDiscount: discountAmount > 0 ? {
                 code: validatedCoupon.code,
                 amount: discountAmount
@@ -457,7 +460,8 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/contact', contactRouter);
 app.use('/api', checkoutRoutes);
 app.use('/api/questions', questionRoutes);
-app.use('/api/coupons', couponRoutes); // COUPON ROUTES
+app.use('/api/coupons', couponRoutes);
+app.use('/api/bitcoin', bitcoinRoutes); // ✅ BITCOIN PAYMENT ROUTES
 
 app.get('/api/products-protected', verifyAuth, (req, res) => {
     res.json({ message: 'Protected route - authenticated!' });
@@ -485,13 +489,27 @@ app.listen(PORT, () => {
     console.log(`📍 Health: http://localhost:${PORT}/health`);
     console.log(`🛒 Cart API: http://localhost:${PORT}/api/cart`);
     console.log(`🎫 Coupon API: http://localhost:${PORT}/api/coupons`);
-    console.log(`💳 Payment: http://localhost:${PORT}/api/payment`);
+    console.log(`💳 Stripe Payment: http://localhost:${PORT}/api/payment`);
+    console.log(`₿  Bitcoin Payment: http://localhost:${PORT}/api/bitcoin`);
     console.log(`⚙️  Stripe Config: http://localhost:${PORT}/api/config/stripe\n`);
+
+    const btcGateways = [];
+    if (process.env.OPENNODE_API_KEY) btcGateways.push('OpenNode');
+    if (process.env.NOWPAYMENTS_API_KEY) btcGateways.push('NOWPayments');
+    if (process.env.COINBASE_COMMERCE_API_KEY) btcGateways.push('Coinbase');
+    if (process.env.COINGATE_API_KEY) btcGateways.push('CoinGate');
+    if (process.env.BTCPAY_API_KEY) btcGateways.push('BTCPay');
 
     if (!process.env.STRIPE_SECRET_KEY) {
         console.error("⚠️  WARNING: Stripe keys not configured!");
     } else {
         console.log("✅ Stripe integration ready");
+    }
+
+    if (btcGateways.length > 0) {
+        console.log(`✅ Bitcoin gateways configured: ${btcGateways.join(', ')}`);
+    } else {
+        console.log("⚠️  WARNING: No Bitcoin payment gateways configured!");
     }
 });
 
@@ -511,10 +529,9 @@ const gracefulShutdown = async (signal) => {
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-// --- Scheduled Tasks ---
 const cleanupOldCarts = async () => {
     try {
-        const Cart = mongoose.models.Cart || mongoose.model('Cart', new mongoose.Schema({ /* ... cart schema ... */ }));
+        const Cart = mongoose.models.Cart || mongoose.model('Cart', new mongoose.Schema({}));
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const result = await Cart.deleteMany({
             lastActivity: { $lt: thirtyDaysAgo }
@@ -525,5 +542,4 @@ const cleanupOldCarts = async () => {
     }
 };
 
-// Run cleanup every 24 hours
 setInterval(cleanupOldCarts, 24 * 60 * 60 * 1000);

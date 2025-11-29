@@ -5,10 +5,10 @@ const Coupon = require("../models/CouponModel");
 
 
 async function seedDefaultCoupon() {
-    const existing = await Coupon.findOne({ code: "HALSTONBTC" });
+    const existing = await Coupon.findOne({ code: "HOLIDAY10" });
     if (!existing) {
         await Coupon.create({
-            code: "HALSTONBTC",
+            code: "HOLIDAY10",
             discountType: "percentage",
             discountValue: 10,
             minOrderAmount: 0,
@@ -19,7 +19,7 @@ async function seedDefaultCoupon() {
             isActive: true,
             description: "Special 10% discount"
         });
-        console.log("✅ Default coupon inserted: HALSTONBTC");
+        console.log("✅ Default coupon inserted: HOLIDAY10");
     }
 
     // SAVE20 - Fixed $10 off on orders over $50, expires in 1 year, 100 uses
