@@ -109,7 +109,7 @@ exports.addItemToCart = async (req, res) => {
 
         const existingItemIndex = cart.items.findIndex(item =>
             item.productId === productToAdd.productId && item.size === (productToAdd.size || 'One Size')
-        );
+        ); 
 
         if (existingItemIndex > -1) {
             cart.items[existingItemIndex].quantity += productToAdd.quantity || 1;

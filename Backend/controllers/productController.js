@@ -2,7 +2,7 @@ const Product = require('../models/productModel');
 const fs = require('fs');
 const path = require('path');
 
-// Helper function to delete files on error (handles arrays or single file objects)
+// Helper function to delete files on error
 const deleteFilesOnError = (files) => {
     if (!files) return;
     const allFiles = [];
@@ -35,7 +35,7 @@ const deleteFilesOnError = (files) => {
     }
 };
 
-// Helper function to safely delete file path (string)
+// Helper function to safely delete file path
 const deleteFile = (filePath) => {
     if (!filePath) return;
     const fullPath = path.resolve(filePath);
@@ -43,6 +43,14 @@ const deleteFile = (filePath) => {
         if (err) console.error('Error deleting file:', fullPath, err);
         else console.log('Deleted file:', fullPath);
     });
+};
+
+// Helper function to create slug from product title
+const createSlug = (title) => {
+    return title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 };
 
 // Get all products with optional category filter
@@ -102,6 +110,38 @@ exports.getProductById = async (req, res) => {
     }
 };
 
+// Get product by name/slug
+exports.getProductByName = async (req, res) => {
+    try {
+        const { name } = req.params;
+        console.log('Fetching product by name/slug:', name);
+
+        const products = await Product.find();
+
+        const product = products.find(p => {
+            const productSlug = createSlug(p.title);
+            return productSlug === name;
+        });
+
+        if (!product) {
+            console.log('Product not found with slug:', name);
+            return res.status(404).json({
+                message: 'Product not found',
+                searchedSlug: name
+            });
+        }
+
+        console.log('Product found:', product.title);
+        res.status(200).json(product);
+    } catch (error) {
+        console.error('Error fetching product by name:', error);
+        res.status(500).json({
+            message: 'Error fetching product',
+            error: error.message
+        });
+    }
+};
+
 // Add new product
 exports.addProduct = async (req, res) => {
     try {
@@ -109,7 +149,7 @@ exports.addProduct = async (req, res) => {
         console.log('Request body:', req.body);
         console.log('Request files:', req.files);
 
-        const { title, price, goldPrice, category, description, stock, hasSilver, hasGold } = req.body;
+        const { title, price, goldPrice, category, description, stock, hasSilver, hasGold, grams } = req.body;
 
         const images = req.files?.images || [];
         const videoFile = req.files?.video && req.files.video.length > 0 ? req.files.video[0] : (req.files?.video || null);
@@ -122,6 +162,7 @@ exports.addProduct = async (req, res) => {
         console.log('Has Gold Product:', isGoldProduct);
         console.log('Silver Price received:', price);
         console.log('Gold Price received:', goldPrice);
+        console.log('Grams received:', grams);
         console.log('Stock received:', stock);
 
         // Validation - basic required fields
@@ -147,11 +188,27 @@ exports.addProduct = async (req, res) => {
             });
         }
 
+        // Parse and validate grams
+        let gramsValue = 1;
+        if (grams !== undefined && grams !== null && grams !== '') {
+            gramsValue = parseFloat(grams);
+            if (isNaN(gramsValue) || gramsValue < 0.01) {
+                deleteFilesOnError(req.files);
+                return res.status(400).json({
+                    message: 'Please provide a valid gram weight (at least 0.01 grams).'
+                });
+            }
+        } else {
+            deleteFilesOnError(req.files);
+            return res.status(400).json({
+                message: 'Gram weight is required.'
+            });
+        }
+
         // Parse and validate prices based on product type
         let silverPrice = null;
         let goldPriceValue = null;
 
-        // If silver product, validate silver price
         if (isSilverProduct) {
             if (!price || price === '' || price === 'undefined') {
                 deleteFilesOnError(req.files);
@@ -168,7 +225,6 @@ exports.addProduct = async (req, res) => {
             }
         }
 
-        // If gold product, validate gold price
         if (isGoldProduct) {
             if (!goldPrice || goldPrice === '' || goldPrice === 'undefined') {
                 deleteFilesOnError(req.files);
@@ -205,6 +261,7 @@ exports.addProduct = async (req, res) => {
         console.log('- Has Gold:', isGoldProduct);
         console.log('- Silver price:', silverPrice);
         console.log('- Gold price:', goldPriceValue);
+        console.log('- Grams:', gramsValue);
         console.log('- Stock:', stockValue);
 
         const newProduct = new Product({
@@ -214,6 +271,7 @@ exports.addProduct = async (req, res) => {
             description: description.trim(),
             price: silverPrice,
             goldPrice: goldPriceValue,
+            grams: gramsValue,
             stock: stockValue,
             hasSilver: isSilverProduct,
             hasGold: isGoldProduct,
@@ -255,7 +313,7 @@ exports.updateProduct = async (req, res) => {
         console.log('Update request body:', req.body);
         console.log('Update request files:', req.files);
 
-        const { title, price, goldPrice, category, description, stock, hasSilver, hasGold } = req.body;
+        const { title, price, goldPrice, category, description, stock, hasSilver, hasGold, grams } = req.body;
 
         let imageOrder = [];
         if (req.body.imageOrder) {
@@ -270,7 +328,6 @@ exports.updateProduct = async (req, res) => {
         const newImageFiles = req.files?.images || [];
         const newVideoFile = req.files?.video && req.files.video.length > 0 ? req.files.video[0] : (req.files?.video || null);
 
-        // Parse boolean flags
         const isSilverProduct = hasSilver === 'true' || hasSilver === true;
         const isGoldProduct = hasGold === 'true' || hasGold === true;
 
@@ -278,6 +335,7 @@ exports.updateProduct = async (req, res) => {
         console.log('Has Gold Product:', isGoldProduct);
         console.log('Silver Price received:', price);
         console.log('Gold Price received:', goldPrice);
+        console.log('Grams received:', grams);
         console.log('Stock received:', stock);
 
         const product = await Product.findById(req.params.id);
@@ -294,6 +352,7 @@ exports.updateProduct = async (req, res) => {
             hasGold: product.hasGold,
             price: product.price,
             goldPrice: product.goldPrice,
+            grams: product.grams,
             stock: product.stock
         });
 
@@ -342,6 +401,7 @@ exports.updateProduct = async (req, res) => {
             title: product.title,
             price: product.price,
             goldPrice: product.goldPrice,
+            grams: product.grams,
             stock: product.stock,
             hasSilver: product.hasSilver,
             hasGold: product.hasGold,
@@ -351,22 +411,18 @@ exports.updateProduct = async (req, res) => {
             video: finalVideoPath
         };
 
-        // Update title
         if (title !== undefined && String(title).trim() !== '') {
             updatedFields.title = String(title).trim();
         }
 
-        // Update category
         if (category !== undefined && String(category).trim() !== '') {
             updatedFields.category = String(category).trim();
         }
 
-        // Update description
         if (description !== undefined && String(description).trim() !== '') {
             updatedFields.description = String(description).trim();
         }
 
-        // Update product type flags
         if (hasSilver !== undefined) {
             updatedFields.hasSilver = isSilverProduct;
         }
@@ -381,6 +437,25 @@ exports.updateProduct = async (req, res) => {
             return res.status(400).json({
                 message: 'Please select at least one product type (Silver or Gold).'
             });
+        }
+
+        // Update grams
+        if (grams !== undefined) {
+            if (grams === '' || grams === null) {
+                deleteFilesOnError(req.files);
+                return res.status(400).json({
+                    message: 'Gram weight is required.'
+                });
+            }
+            
+            const gramsValue = parseFloat(grams);
+            if (isNaN(gramsValue) || gramsValue < 0.01) {
+                deleteFilesOnError(req.files);
+                return res.status(400).json({
+                    message: 'Please provide a valid gram weight (at least 0.01 grams).'
+                });
+            }
+            updatedFields.grams = gramsValue;
         }
 
         // Update silver price
@@ -402,7 +477,6 @@ exports.updateProduct = async (req, res) => {
                 updatedFields.price = silverPrice;
             }
         } else {
-            // If not a silver product, set price to null
             updatedFields.price = null;
         }
 
@@ -425,7 +499,6 @@ exports.updateProduct = async (req, res) => {
                 updatedFields.goldPrice = goldPriceValue;
             }
         } else {
-            // If not a gold product, set goldPrice to null
             updatedFields.goldPrice = null;
         }
 
@@ -448,7 +521,6 @@ exports.updateProduct = async (req, res) => {
             updatedFields.stock = parsedStock;
         }
 
-        // Ensure at least one image
         if (!updatedFields.image || updatedFields.image.length === 0) {
             deleteFilesOnError(req.files);
             return res.status(400).json({
@@ -479,6 +551,7 @@ exports.updateProduct = async (req, res) => {
             hasGold: updatedProduct.hasGold,
             silverPrice: updatedProduct.price,
             goldPrice: updatedProduct.goldPrice,
+            grams: updatedProduct.grams,
             stock: updatedProduct.stock
         });
 
@@ -523,7 +596,6 @@ exports.deleteProduct = async (req, res) => {
             });
         }
 
-        // Delete associated files
         if (product.image && product.image.length > 0) {
             product.image.forEach(imgPath => {
                 deleteFile(imgPath);

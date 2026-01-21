@@ -6,6 +6,7 @@ const fs = require('fs');
 const {
     getProducts,
     getProductById,
+    getProductByName, // NEW: Add this controller
     addProduct,
     updateProduct,
     deleteProduct
@@ -126,7 +127,7 @@ const handleUpload = (req, res, next) => {
     });
 };
 
-// Debug middleware - FIXED: Only logs after multer parses body
+// Debug middleware
 const debugMiddleware = (req, res, next) => {
     console.log('=== Request Debug Info ===');
     console.log('Method:', req.method);
@@ -145,8 +146,12 @@ const debugMiddleware = (req, res, next) => {
     next();
 };
 
-// Routes - handleUpload FIRST, then debugMiddleware
+// Routes
 router.get('/', getProducts);
+
+// IMPORTANT: More specific route must come BEFORE generic :id route
+router.get('/name/:name', getProductByName); // NEW: Get product by name/slug
+
 router.get('/:id', getProductById);
 router.post('/', handleUpload, debugMiddleware, addProduct);
 router.put('/:id', handleUpload, debugMiddleware, updateProduct);

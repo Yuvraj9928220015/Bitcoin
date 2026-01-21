@@ -10,14 +10,17 @@ const initialProductState = {
     title: '',
     description: '',
     price: '',
+    goldPrice: '',
+    grms: '',
     category: '',
+    stock: '',
+    hasSilver: true,
+    hasGold: true,
     images: Array(MAX_IMAGES).fill(null),
     video: null,
 };
 
 export default function ProductList() {
-    // Authentication states removed
-
     const [products, setProducts] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
     const [showForm, setShowForm] = useState(false);
@@ -30,24 +33,25 @@ export default function ProductList() {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        // Directly fetch products on component mount, no authentication check needed
         fetchProducts();
     }, []);
 
-    // Fetches products from the backend
     const fetchProducts = async () => {
         try {
-            const response = await axios.get(`${API_URL}/api/products`); // Removed withCredentials
+            const response = await axios.get(`${API_URL}/api/products`);
             setProducts(response.data);
         } catch (error) {
             console.error("Error fetching products:", error);
-            // Removed setIsAuthenticated(false)
         }
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setCurrentProduct({ ...currentProduct, [name]: value });
+        const { name, value, type, checked } = e.target;
+        if (type === 'checkbox') {
+            setCurrentProduct({ ...currentProduct, [name]: checked });
+        } else {
+            setCurrentProduct({ ...currentProduct, [name]: value });
+        }
     };
 
     const handleImageFileChange = (e, index) => {
@@ -115,8 +119,25 @@ export default function ProductList() {
         const formData = new FormData();
         formData.append('title', currentProduct.title);
         formData.append('description', currentProduct.description);
-        formData.append('price', currentProduct.price);
         formData.append('category', currentProduct.category);
+        formData.append('hasSilver', currentProduct.hasSilver);
+        formData.append('hasGold', currentProduct.hasGold);
+        
+        // Add prices based on product type
+        if (currentProduct.hasSilver) {
+            formData.append('price', currentProduct.price);
+        }
+        if (currentProduct.hasGold) {
+            formData.append('goldPrice', currentProduct.goldPrice);
+        }
+        
+        // Add grams if provided
+        if (currentProduct.grms !== '' && currentProduct.grms !== null) {
+            formData.append('grms', currentProduct.grms);
+        }
+        
+        // Add stock
+        formData.append('stock', currentProduct.stock || '0');
 
         const imageOrder = [];
         const newImageFiles = [];
@@ -149,13 +170,13 @@ export default function ProductList() {
         try {
             if (isEditing) {
                 await axios.put(`${API_URL}/api/products/${currentProduct.id}`, formData, {
-                    headers: { // Removed withCredentials
+                    headers: {
                         'Content-Type': 'multipart/form-data',
                     },
                 });
             } else {
                 await axios.post(`${API_URL}/api/products`, formData, {
-                    headers: { // Removed withCredentials
+                    headers: {
                         'Content-Type': 'multipart/form-data',
                     },
                 });
@@ -163,7 +184,6 @@ export default function ProductList() {
             resetForm();
             fetchProducts();
         } catch (error) {
-            // Removed setIsAuthenticated(false)
             alert(`Error: ${error.response?.data?.message || error.message}`);
         }
     };
@@ -185,8 +205,13 @@ export default function ProductList() {
             id: product._id,
             title: product.title,
             description: product.description,
-            price: product.price,
+            price: product.price || '',
+            goldPrice: product.goldPrice || '',
+            grms: product.grms || '',
             category: product.category,
+            stock: product.stock || '0',
+            hasSilver: product.hasSilver !== undefined ? product.hasSilver : true,
+            hasGold: product.hasGold !== undefined ? product.hasGold : true,
             images: currentImagesState,
             video: product.video || null,
         });
@@ -198,10 +223,9 @@ export default function ProductList() {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
             try {
-                await axios.delete(`${API_URL}/api/products/${id}`); // Removed withCredentials
+                await axios.delete(`${API_URL}/api/products/${id}`);
                 fetchProducts();
             } catch (error) {
-                // Removed setIsAuthenticated(false)
                 console.error("Error deleting product:", error);
             }
         }
@@ -242,7 +266,6 @@ export default function ProductList() {
         product.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Login form removed, always render product management interface
     return (
         <>
             <div className="product-list-page">
@@ -274,7 +297,10 @@ export default function ProductList() {
                                     <th>Title</th>
                                     <th>Description</th>
                                     <th>Category</th>
-                                    <th>Price</th>
+                                    <th>Silver Price</th>
+                                    <th>Gold Price</th>
+                                    <th>Grms</th>
+                                    <th>Stock</th>
                                     <th className="actions-col">Actions</th>
                                 </tr>
                             </thead>
@@ -297,7 +323,18 @@ export default function ProductList() {
                                         <td data-label="Category" onClick={() => openProductView(product)}>
                                             <span className="category-tag">{product.category}</span>
                                         </td>
-                                        <td data-label="Price" onClick={() => openProductView(product)}>${Number(product.price).toFixed(2)}</td>
+                                        <td data-label="Silver Price" onClick={() => openProductView(product)}>
+                                            {product.hasSilver && product.price ? `$${Number(product.price).toFixed(2)}` : '-'}
+                                        </td>
+                                        <td data-label="Gold Price" onClick={() => openProductView(product)}>
+                                            {product.hasGold && product.goldPrice ? `$${Number(product.goldPrice).toFixed(2)}` : '-'}
+                                        </td>
+                                        <td data-label="Grms" onClick={() => openProductView(product)}>
+                                            {product.grms ? `${product.grms}g` : '-'}
+                                        </td>
+                                        <td data-label="Stock" onClick={() => openProductView(product)}>
+                                            {product.stock || 0}
+                                        </td>
                                         <td data-label="Actions">
                                             <div className="table-actions">
                                                 <button onClick={() => handleEditClick(product)} className="action-btn" title="Edit Product">
@@ -310,7 +347,7 @@ export default function ProductList() {
                                         </td>
                                     </tr>
                                 )) : (
-                                    <tr><td colSpan="6" className="empty-state"><div className="empty-state-content"><h3>No products found</h3><p>Add a new product to get started!</p></div></td></tr>
+                                    <tr><td colSpan="9" className="empty-state"><div className="empty-state-content"><h3>No products found</h3><p>Add a new product to get started!</p></div></td></tr>
                                 )}
                             </tbody>
                         </table>
@@ -337,11 +374,97 @@ export default function ProductList() {
                                 </div>
 
                                 <div className="form-row">
-                                    <div className="form-group"><label htmlFor="price">Price</label><input id="price" type="number" name="price" value={currentProduct.price} onChange={handleInputChange} required step="0.01" min="0" /></div>
-                                    <div className="form-group"><label htmlFor="category">Category</label><input id="category" type="text" name="category" value={currentProduct.category} onChange={handleInputChange} required /></div>
+                                    <div className="form-group">
+                                        <label htmlFor="category">Category</label>
+                                        <input id="category" type="text" name="category" value={currentProduct.category} onChange={handleInputChange} required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label htmlFor="grms">Grams (Optional)</label>
+                                        <input 
+                                            id="grms" 
+                                            type="number" 
+                                            name="grms" 
+                                            value={currentProduct.grms} 
+                                            onChange={handleInputChange} 
+                                            step="0.01" 
+                                            min="0" 
+                                            placeholder="e.g., 10.5"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label htmlFor="stock">Stock</label>
+                                        <input 
+                                            id="stock" 
+                                            type="number" 
+                                            name="stock" 
+                                            value={currentProduct.stock} 
+                                            onChange={handleInputChange} 
+                                            min="0"
+                                            placeholder="0"
+                                        />
+                                    </div>
                                 </div>
 
-                                {/* NEW: Combined layout for Images and Video */}
+                                {/* Product Type Selection */}
+                                <div className="form-group">
+                                    <label>Product Type</label>
+                                    <div className="checkbox-group">
+                                        <label className="checkbox-label">
+                                            <input 
+                                                type="checkbox" 
+                                                name="hasSilver" 
+                                                checked={currentProduct.hasSilver} 
+                                                onChange={handleInputChange}
+                                            />
+                                            <span>Silver Product</span>
+                                        </label>
+                                        <label className="checkbox-label">
+                                            <input 
+                                                type="checkbox" 
+                                                name="hasGold" 
+                                                checked={currentProduct.hasGold} 
+                                                onChange={handleInputChange}
+                                            />
+                                            <span>Gold Product</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* Conditional Price Fields */}
+                                <div className="form-row">
+                                    {currentProduct.hasSilver && (
+                                        <div className="form-group">
+                                            <label htmlFor="price">Silver Price</label>
+                                            <input 
+                                                id="price" 
+                                                type="number" 
+                                                name="price" 
+                                                value={currentProduct.price} 
+                                                onChange={handleInputChange} 
+                                                required={currentProduct.hasSilver}
+                                                step="0.01" 
+                                                min="0" 
+                                            />
+                                        </div>
+                                    )}
+                                    {currentProduct.hasGold && (
+                                        <div className="form-group">
+                                            <label htmlFor="goldPrice">Gold Price</label>
+                                            <input 
+                                                id="goldPrice" 
+                                                type="number" 
+                                                name="goldPrice" 
+                                                value={currentProduct.goldPrice} 
+                                                onChange={handleInputChange} 
+                                                required={currentProduct.hasGold}
+                                                step="0.01" 
+                                                min="0" 
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Combined layout for Images and Video */}
                                 <div className="form-group-flex">
                                     <div className="form-group form-group-images">
                                         <label className="form-label">Product Images (up to {MAX_IMAGES})</label>
@@ -420,10 +543,30 @@ export default function ProductList() {
                                     <span className="info-category-badge">{selectedProduct.category}</span>
                                     <h2 className="info-title">{selectedProduct.title}</h2>
                                     <p className="info-description">{selectedProduct.description}</p>
-                                    <div className="info-price">${Number(selectedProduct.price).toFixed(2)}</div>
+                                    
+                                    <div className="info-details">
+                                        {selectedProduct.hasSilver && selectedProduct.price && (
+                                            <div className="info-price">
+                                                <span className="price-label">Silver Price:</span> ${Number(selectedProduct.price).toFixed(2)}
+                                            </div>
+                                        )}
+                                        {selectedProduct.hasGold && selectedProduct.goldPrice && (
+                                            <div className="info-price">
+                                                <span className="price-label">Gold Price:</span> ${Number(selectedProduct.goldPrice).toFixed(2)}
+                                            </div>
+                                        )}
+                                        {selectedProduct.grms && (
+                                            <div className="info-detail">
+                                                <span className="detail-label">Weight:</span> {selectedProduct.grms}g
+                                            </div>
+                                        )}
+                                        <div className="info-detail">
+                                            <span className="detail-label">Stock:</span> {selectedProduct.stock || 0}
+                                        </div>
+                                    </div>
+                                    
                                     <div className="info-actions">
                                         <button onClick={() => { closeModal(); handleEditClick(selectedProduct); }} className="btn-primary">Edit Product</button>
-                                        <p></p>
                                     </div>
                                 </div>
                             </div>

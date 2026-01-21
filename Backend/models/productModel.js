@@ -30,6 +30,13 @@ const productSchema = new mongoose.Schema({
         default: null,
         min: [0, 'Gold price cannot be negative']
     },
+    // NEW: Gram weight for the product
+    grams: {
+        type: Number,
+        required: [true, 'Please add gram weight'],
+        min: [0.01, 'Grams must be at least 0.01'],
+        default: 1
+    },
     stock: {
         type: Number,
         required: [true, 'Please add stock quantity'],
@@ -111,5 +118,6 @@ productSchema.index({ goldPrice: 1 });
 productSchema.index({ stock: 1 });
 productSchema.index({ hasSilver: 1 });
 productSchema.index({ hasGold: 1 });
+productSchema.index({ grams: 1 }); // NEW: Index for grams
 
 module.exports = mongoose.model('Product', productSchema);
