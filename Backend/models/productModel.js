@@ -57,6 +57,10 @@ const productSchema = new mongoose.Schema({
         required: [true, 'Please add at least one image'],
         validate: [val => val.length > 0, 'Please add at least one image']
     },
+    slug: {
+        type: String,
+        unique: true
+    },
     video: {
         type: String,
     }

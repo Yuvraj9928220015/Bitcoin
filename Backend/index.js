@@ -24,6 +24,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(cors({
     origin: [
+        "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:5174",
         "http://localhost:5175",
@@ -31,7 +32,7 @@ app.use(cors({
         "https://bitcoinbutik.com",
         "https://www.bitcoinbutik.com"
     ],
-    credentials: true,
+    credentials: false,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
         'Content-Type',

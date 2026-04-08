@@ -1,3 +1,6 @@
+// routes/productRoute.js
+
+const Product = require('../models/productModel');
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -6,7 +9,7 @@ const fs = require('fs');
 const {
     getProducts,
     getProductById,
-    getProductByName, // NEW: Add this controller
+    getProductByName,
     addProduct,
     updateProduct,
     deleteProduct
@@ -31,42 +34,24 @@ const storage = multer.diskStorage({
 
 // File filter function
 const fileFilter = (req, file, cb) => {
-    console.log('File being processed:', file);
-
     const imageTypes = /jpeg|jpg|png|gif|webp/;
     const videoTypes = /mp4|mov|avi|wmv|mkv|flv|webm/;
 
     const extname = path.extname(file.originalname).toLowerCase();
     const mimetype = file.mimetype;
 
-    console.log('File extension:', extname);
-    console.log('File mimetype:', mimetype);
-
     if (file.fieldname === 'images') {
         const isValidImage = imageTypes.test(extname) && mimetype.startsWith('image/');
-
-        if (isValidImage) {
-            console.log('Valid image file accepted');
-            return cb(null, true);
-        } else {
-            console.log('Invalid image file rejected');
-            return cb(new Error('Images must be jpeg, jpg, png, gif, or webp format'));
-        }
+        if (isValidImage) return cb(null, true);
+        return cb(new Error('Images must be jpeg, jpg, png, gif, or webp format'));
     }
 
     if (file.fieldname === 'video') {
         const isValidVideo = videoTypes.test(extname) && mimetype.startsWith('video/');
-
-        if (isValidVideo) {
-            console.log('Valid video file accepted');
-            return cb(null, true);
-        } else {
-            console.log('Invalid video file rejected');
-            return cb(new Error('Videos must be mp4, mov, avi, wmv, mkv, flv, or webm format'));
-        }
+        if (isValidVideo) return cb(null, true);
+        return cb(new Error('Videos must be mp4, mov, avi, wmv, mkv, flv, or webm format'));
     }
 
-    console.log('Unknown file field or invalid file type');
     cb(new Error('Invalid file type or field name'));
 };
 
@@ -83,17 +68,12 @@ const upload = multer({
     { name: 'video', maxCount: 1 }
 ]);
 
-// Middleware to handle file upload errors
+// Upload error middleware
 const handleUpload = (req, res, next) => {
-    console.log('Upload middleware called');
-
     upload(req, res, (err) => {
         if (err) {
-            console.error('Upload error:', err);
-
             if (err instanceof multer.MulterError) {
                 let message = 'Upload Error';
-
                 switch (err.code) {
                     case 'LIMIT_FILE_SIZE':
                         message = 'File too large. Maximum size is 100MB per file.';
@@ -110,49 +90,52 @@ const handleUpload = (req, res, next) => {
                     default:
                         message = `Upload Error: ${err.message}`;
                 }
-
-                return res.status(400).json({
-                    message: message,
-                    error: err.code
-                });
+                return res.status(400).json({ message, error: err.code });
             }
-
-            return res.status(400).json({
-                message: err.message || 'File upload error'
-            });
+            return res.status(400).json({ message: err.message || 'File upload error' });
         }
-
-        console.log('Files uploaded successfully:', req.files);
         next();
     });
 };
 
-// Debug middleware
+// Debug middleware (remove in production)
 const debugMiddleware = (req, res, next) => {
-    console.log('=== Request Debug Info ===');
-    console.log('Method:', req.method);
-    console.log('URL:', req.url);
-    console.log('Body:', req.body);
-    console.log('Files:', req.files);
-    
-    if (req.body) {
-        console.log('Title:', req.body.title);
-        console.log('Price:', req.body.price);
-        console.log('Gold Price:', req.body.goldPrice);
-        console.log('Category:', req.body.category);
+    if (process.env.NODE_ENV !== 'production') {
+        console.log('=== Request Debug ===');
+        console.log('Method:', req.method, '| URL:', req.url);
+        console.log('Body:', req.body);
+        console.log('Files:', req.files);
+        console.log('====================');
     }
-    
-    console.log('========================');
     next();
 };
 
-// Routes
+// ─── Routes ───────────────────────────────────────────────────────────────────
+// ✅ FIX: Removed the duplicate /product/:slug route that conflicted with /name/:name
+// The /slug/:slug route below handles slug lookups via the controller cleanly.
+// IMPORTANT: More specific routes MUST come before /:id (which catches everything)
+
 router.get('/', getProducts);
 
-// IMPORTANT: More specific route must come BEFORE generic :id route
-router.get('/name/:name', getProductByName); // NEW: Get product by name/slug
+// ✅ Get by slug — used for SEO-friendly URLs (must be BEFORE /:id)
+router.get('/slug/:slug', async (req, res) => {
+    try {
+        const product = await Product.findOne({ slug: req.params.slug });
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        res.json(product);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
+// ✅ Get by name (must be BEFORE /:id)
+router.get('/name/:name', getProductByName);
+
+// ✅ Get by MongoDB _id (must be LAST specific GET route)
 router.get('/:id', getProductById);
+
 router.post('/', handleUpload, debugMiddleware, addProduct);
 router.put('/:id', handleUpload, debugMiddleware, updateProduct);
 router.delete('/:id', deleteProduct);
