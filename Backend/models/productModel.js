@@ -70,6 +70,18 @@ const productSchema = new mongoose.Schema({
 
 // Pre-save validation hook
 productSchema.pre('save', function(next) {
+
+    // ✅ Slug generate (ADD THIS PART)
+    if (this.title && !this.slug) {
+        this.slug = this.title
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, "")
+            .replace(/\s+/g, "-");
+    }
+
+    // ✅ Existing validations (same as your code)
+
     // At least one product type must be selected
     if (!this.hasSilver && !this.hasGold) {
         return next(new Error('Product must have at least one type (Silver or Gold)'));
