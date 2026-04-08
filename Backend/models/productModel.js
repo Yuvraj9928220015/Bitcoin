@@ -12,7 +12,6 @@ const productSchema = new mongoose.Schema({
     category: {
         type: String,
         required: [true, 'Please add a category'],
-        index: true
     },
     description: {
         type: String,
