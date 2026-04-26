@@ -5,7 +5,7 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 async function createCoupon() {
     try {
         const coupon = await stripe.coupons.create({
-            id: 'Halstonbtc',  // coupon code
+            id: 'NATALIE',  // coupon code
             percent_off: 10,   // 10% discount
             duration: 'once',  // sirf ek order me use ho
         });

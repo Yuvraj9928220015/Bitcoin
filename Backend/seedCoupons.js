@@ -11,7 +11,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 const couponsToSeed = [
     {
-        code: 'HALSTONBTC', // 10% off
+        code: 'NATALIE', // 10% off
         discountType: 'percentage',
         discountValue: 10,
         minOrderAmount: 0,
@@ -19,7 +19,7 @@ const couponsToSeed = [
         expiryDate: null,
         usageLimit: null,
         isActive: true,
-        description: 'Special 10% discount for Halstonbtc'
+        description: 'Special 10% discount for NATALIE'
     },
     {
         code: 'BIGSAVE',
