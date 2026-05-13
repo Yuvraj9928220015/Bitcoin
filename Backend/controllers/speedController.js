@@ -174,7 +174,10 @@ exports.createSpeedPayment = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Speed Payment Error:', error.response?.data || error.message);
+        console.error("❌ STATUS:", error.response?.status);
+        console.error("❌ DATA:", error.response?.data);
+        console.error("❌ HEADERS:", error.response?.headers);
+        console.error("❌ MESSAGE:", error.message);
         return res.status(400).json({
             success: false,
             message: error.response?.data?.message || error.message || 'Bitcoin payment creation failed'
