@@ -6,12 +6,6 @@ const Coupon = require('../models/CouponModel');
 const SPEED_API_URL = 'https://api.tryspeed.com';
 const SPEED_API_KEY = process.env.SPEED_API_KEY;
 
-// Helper: Base64 encode API key for Basic Auth
-const getAuthHeader = () => {
-    const encoded = Buffer.from(`${SPEED_API_KEY}:`).toString('base64');
-    return `Basic ${encoded}`;
-};
-
 // ─── Create Speed Payment (Lightning Invoice) ───
 exports.createSpeedPayment = async (req, res) => {
     try {
@@ -110,7 +104,7 @@ exports.createSpeedPayment = async (req, res) => {
             },
             {
                 headers: {
-                    Authorization: getAuthHeader(),
+                    'x-api-key': SPEED_API_KEY,
                     'Content-Type': 'application/json',
                     Accept: 'application/json'
                 }
@@ -194,7 +188,7 @@ exports.checkSpeedPaymentStatus = async (req, res) => {
             `${SPEED_API_URL}/payments/${paymentId}`,
             {
                 headers: {
-                    Authorization: getAuthHeader(),
+                    'x-api-key': SPEED_API_KEY,
                     Accept: 'application/json'
                 }
             }
