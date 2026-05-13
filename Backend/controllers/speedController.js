@@ -112,7 +112,7 @@ exports.createSpeedPayment = async (req, res) => {
                 headers: {
                     Authorization: getAuthHeader(),
                     'Content-Type': 'application/json',
-                    'Speed-Version': '2024-09-24'
+                    Accept: 'application/json'
                 }
             }
         );
@@ -192,7 +192,7 @@ exports.checkSpeedPaymentStatus = async (req, res) => {
             {
                 headers: {
                     Authorization: getAuthHeader(),
-                    'Speed-Version': '2024-09-24'
+                    Accept: 'application/json'
                 }
             }
         );
