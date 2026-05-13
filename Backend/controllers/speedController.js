@@ -1,5 +1,6 @@
 // controllers/speedController.js
 const axios = require('axios');
+const https = require('https');
 const Order = require('../models/Order');
 const Coupon = require('../models/CouponModel');
 
@@ -107,7 +108,10 @@ exports.createSpeedPayment = async (req, res) => {
                     'x-api-key': SPEED_API_KEY,
                     'Content-Type': 'application/json',
                     Accept: 'application/json'
-                }
+                },
+                httpsAgent: new https.Agent({
+                    family: 4
+                })
             }
         );
 
@@ -190,7 +194,10 @@ exports.checkSpeedPaymentStatus = async (req, res) => {
                 headers: {
                     'x-api-key': SPEED_API_KEY,
                     Accept: 'application/json'
-                }
+                },
+                httpsAgent: new https.Agent({
+                    family: 4
+                })
             }
         );
 
