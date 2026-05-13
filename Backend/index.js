@@ -1,4 +1,3 @@
-// server.js - COMPLETE WITH BITCOIN PAYMENT INTEGRATION
 const dotenv = require('dotenv');
 const express = require('express');
 const mongoose = require('mongoose');
@@ -16,7 +15,7 @@ dotenv.config();
 
 const app = express();
 
-const MONGO_URL = "mongodb://bituser:Bitcoinbutik%402111@93.127.172.98:27017/Bitcoine?authSource=Bitcoine";
+const MONGO_URL = process.env.MONGO_URL;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_for_jwt_change_in_production';
 const PORT = process.env.PORT || 9000;
 
@@ -26,6 +25,7 @@ app.use(cors({
     origin: [
         "http://localhost:3000",
         "http://localhost:5173",
+        "http://localhost:3001",
         "http://localhost:5174",
         "http://localhost:5175",
         "http://bitcoinbutik.com",
@@ -40,10 +40,13 @@ app.use(cors({
         'X-Browser-ID',
         'X-Requested-With',
         'x-cc-webhook-signature',
-        'x-nowpayments-sig'
+        'x-nowpayments-sig',
+        'x-speed-signature'
     ],
     exposedHeaders: ['X-Browser-ID']
 }));
+
+app.use('/api/speed/webhook', express.raw({ type: 'application/json' }));
 
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ limit: '500mb', extended: true }));
@@ -53,8 +56,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 mongoose.connect(MONGO_URL)
     .then(() => {
-        console.log("✅ Mongoose Connected to MongoDB");
-        console.log(`📦 Connected to database: ${mongoose.connection.name}`);
+        console.log(" Mongoose Connected to MongoDB");
+        console.log(` Connected to database: ${mongoose.connection.name}`);
     })
     .catch(error => console.error("❌ Database Connection Error:", error));
 
@@ -78,7 +81,6 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
-        Receiver: process.env.EMAIL_RECEIVER
     },
 });
 
@@ -101,8 +103,6 @@ app.use(session({
     name: 'bitcoine.browser.session'
 }));
 
-
-
 app.use((req, res, next) => {
     req.browserInfo = {
         userAgent: req.headers['user-agent'] || '',
@@ -112,7 +112,6 @@ app.use((req, res, next) => {
         platform: req.headers['sec-ch-ua-platform'] || '',
         browserId: req.headers['x-browser-id'] || null
     };
-
     if (process.env.NODE_ENV !== 'production') {
         console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
     }
@@ -142,7 +141,7 @@ const checkoutRoutes = require('./routes/checkoutRoutes');
 const registerAuthRoutes = require('./routes/RegisterRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const couponRoutes = require('./routes/couponRouter');
-const bitcoinRoutes = require('./routes/bitcoinRoutes'); // ✅ BITCOIN ROUTES
+const bitcoinRoutes = require('./routes/bitcoinRoutes');
 
 // Basic Routes
 app.get('/', (req, res) => res.send('Bitcoine API is running'));
@@ -159,7 +158,8 @@ app.get('/health', (req, res) => {
             nowpayments: !!process.env.NOWPAYMENTS_API_KEY,
             coinbase: !!process.env.COINBASE_COMMERCE_API_KEY,
             coingate: !!process.env.COINGATE_API_KEY,
-            btcpay: !!process.env.BTCPAY_API_KEY
+            btcpay: !!process.env.BTCPAY_API_KEY,
+            speed: !!process.env.SPEED_API_KEY  // Speed add है
         },
         couponsActive: true,
         timestamp: new Date().toISOString()
@@ -174,15 +174,13 @@ app.get('/api/browser-info', (req, res) => {
     });
 });
 
-// Stripe Configuration
 app.get('/api/config/stripe', (req, res) => {
-    console.log("✅ Frontend requesting Stripe config");
+    console.log(" Frontend requesting Stripe config");
     res.json({
         publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
     });
 });
 
-// Admin Login
 app.post('/api/admin/login', (req, res) => {
     const { email, password } = req.body;
     if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
@@ -193,7 +191,6 @@ app.post('/api/admin/login', (req, res) => {
     }
 });
 
-// User Auth Routes
 app.use('/api/auth', registerAuthRoutes);
 
 app.post('/api/auth/login', async (req, res) => {
@@ -203,21 +200,17 @@ app.post('/api/auth/login', async (req, res) => {
         if (!user) {
             return res.status(400).json({ success: false, message: 'Invalid Credentials' });
         }
-
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ success: false, message: 'Invalid Credentials' });
         }
-
         const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
-
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             maxAge: 3600000
         });
-
         res.json({ success: true, message: 'Login successful' });
     } catch (err) {
         console.error(err);
@@ -227,27 +220,21 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.post('/api/auth/register', async (req, res) => {
     const { title, firstName, lastName, country, email, password, termsAgreed, newsletterAgreed } = req.body;
-
     if (!firstName || !lastName || !email || !password || !termsAgreed) {
         return res.status(400).json({ message: 'Please enter all required fields' });
     }
-
     try {
         let user = await User.findOne({ email });
         if (user) {
             return res.status(400).json({ message: 'User already exists' });
         }
-
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-
         user = await User.create({
             title, firstName, lastName, country, email,
             password: hashedPassword, termsAgreed, newsletterAgreed
         });
-
         const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
-
         res.status(201).json({
             success: true, token,
             user: { id: user._id, firstName: user.firstName, email: user.email }
@@ -292,9 +279,6 @@ app.get('/api/contact-info', (req, res) => {
     });
 });
 
-// ============================================
-// STRIPE PAYMENT ROUTE WITH COUPON SUPPORT
-// ============================================
 app.post("/api/payment", async (req, res) => {
     let { amount, id, paymentMethodId, browserId, customerInfo, items, note, appliedCoupon } = req.body;
 
@@ -343,21 +327,18 @@ app.post("/api/payment", async (req, res) => {
                         message: 'Coupon has expired'
                     });
                 }
-
                 if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
                     return res.status(400).json({
                         success: false,
                         message: 'Coupon usage limit reached'
                     });
                 }
-
                 if (serverCalculatedSubtotal < coupon.minOrderAmount) {
                     return res.status(400).json({
                         success: false,
                         message: `Minimum order of $${coupon.minOrderAmount} required`
                     });
                 }
-
                 if (coupon.discountType === 'percentage') {
                     discountAmount = (serverCalculatedSubtotal * coupon.discountValue) / 100;
                     if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
@@ -374,7 +355,7 @@ app.post("/api/payment", async (req, res) => {
                     discountAmount: discountAmount
                 };
 
-                console.log("✅ Coupon validated:", validatedCoupon);
+                console.log(" Coupon validated:", validatedCoupon);
 
                 await Coupon.findOneAndUpdate(
                     { code: coupon.code },
@@ -407,7 +388,7 @@ app.post("/api/payment", async (req, res) => {
             receipt_email: customerInfo?.email || null
         });
 
-        console.log("✅ STRIPE PAYMENT SUCCESSFUL!");
+        console.log(" STRIPE PAYMENT SUCCESSFUL!");
         console.log("Payment ID:", payment.id);
 
         if (transporter && customerInfo?.email) {
@@ -420,13 +401,13 @@ app.post("/api/payment", async (req, res) => {
                     html: `
                         <h2>Thank you for your order!</h2>
                         <p>Dear ${customerInfo.firstName} ${customerInfo.lastName},</p>
-                        <p>Payment: <strong>${(finalAmountInCents / 100).toFixed(2)}</strong></p>
-                        ${validatedCoupon ? `<p>Discount (${validatedCoupon.code}): -${discountAmount.toFixed(2)}</p>` : ''}
+                        <p>Payment: <strong>$${(finalAmountInCents / 100).toFixed(2)}</strong></p>
+                        ${validatedCoupon ? `<p>Discount (${validatedCoupon.code}): -$${discountAmount.toFixed(2)}</p>` : ''}
                         <p>Payment ID: ${payment.id}</p>
                         <p>Status: Confirmed</p>
                     `
                 });
-                console.log("✅ Email sent");
+                console.log(" Email sent");
             } catch (emailError) {
                 console.error("Email error:", emailError.message);
             }
@@ -462,7 +443,7 @@ app.use('/api/contact', contactRouter);
 app.use('/api', checkoutRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/coupons', couponRoutes);
-app.use('/api/bitcoin', bitcoinRoutes); // ✅ BITCOIN PAYMENT ROUTES
+app.use('/api/bitcoin', bitcoinRoutes);
 
 app.get('/api/products-protected', verifyAuth, (req, res) => {
     res.json({ message: 'Protected route - authenticated!' });
@@ -486,13 +467,13 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`\n🚀 Server running on port ${PORT}`);
-    console.log(`📍 Health: http://localhost:${PORT}/health`);
-    console.log(`🛒 Cart API: http://localhost:${PORT}/api/cart`);
-    console.log(`🎫 Coupon API: http://localhost:${PORT}/api/coupons`);
-    console.log(`💳 Stripe Payment: http://localhost:${PORT}/api/payment`);
-    console.log(`₿  Bitcoin Payment: http://localhost:${PORT}/api/bitcoin`);
-    console.log(`⚙️  Stripe Config: http://localhost:${PORT}/api/config/stripe\n`);
+    console.log(`\n Server running on port ${PORT}`);
+    console.log(` Health: http://localhost:${PORT}/health`);
+    console.log(` Cart API: http://localhost:${PORT}/api/cart`);
+    console.log(` Coupon API: http://localhost:${PORT}/api/coupons`);
+    console.log(` Stripe Payment: http://localhost:${PORT}/api/payment`);
+    console.log(` Bitcoin Payment: http://localhost:${PORT}/api/bitcoin`);
+    console.log(` Stripe Config: http://localhost:${PORT}/api/config/stripe\n`);
 
     const btcGateways = [];
     if (process.env.OPENNODE_API_KEY) btcGateways.push('OpenNode');
@@ -500,17 +481,18 @@ app.listen(PORT, () => {
     if (process.env.COINBASE_COMMERCE_API_KEY) btcGateways.push('Coinbase');
     if (process.env.COINGATE_API_KEY) btcGateways.push('CoinGate');
     if (process.env.BTCPAY_API_KEY) btcGateways.push('BTCPay');
+    if (process.env.SPEED_API_KEY) btcGateways.push('Speed');
 
     if (!process.env.STRIPE_SECRET_KEY) {
-        console.error("⚠️  WARNING: Stripe keys not configured!");
+        console.error(" WARNING: Stripe keys not configured!");
     } else {
-        console.log("✅ Stripe integration ready");
+        console.log(" Stripe integration ready");
     }
 
     if (btcGateways.length > 0) {
-        console.log(`✅ Bitcoin gateways configured: ${btcGateways.join(', ')}`);
+        console.log(` Bitcoin gateways configured: ${btcGateways.join(', ')}`);
     } else {
-        console.log("⚠️  WARNING: No Bitcoin payment gateways configured!");
+        console.log(" WARNING: No Bitcoin payment gateways configured!");
     }
 });
 

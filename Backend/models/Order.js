@@ -79,7 +79,6 @@ const orderSchema = new mongoose.Schema({
         state:
         {
             type: String,
-            required: true
         },
         zip:
         {
@@ -109,13 +108,36 @@ const orderSchema = new mongoose.Schema({
         type: String
     },
 
-    paymentMethodId: { type: String, required: true },
+    // CHANGE 1: required: true → hata diya (Lightning payment mein card ID nahi hoti)
+    paymentMethodId: { type: String },
+
+    // CHANGE 2: paymentMethod field ADD kiya (card ya lightning)
+    paymentMethod: {
+        type: String,
+        enum: ['card', 'bitcoin_lightning'],
+        default: 'card'
+    },
+
     paymentStatus: {
         type: String,
         enum: ['pending', 'succeeded', 'failed', 'refunded'],
         default: 'pending'
     },
     stripeChargeId: { type: String },
+
+    // CHANGE 3: speedPaymentId field ADD kiya (Speed Lightning payment ID)
+    speedPaymentId: { type: String, default: null, index: true },
+
+    // Coupon fields (pehle se hai toh theek, nahi hai toh add karo)
+    couponUsed: { type: String, default: null },
+    appliedDiscountsDetails: [{
+        code: String,
+        discountType: String,
+        discountValue: Number,
+        discountAmount: Number,
+    }],
+
+    orderNumber: { type: String },
 
     shippingDetails: {
         country: { type: String },
@@ -125,7 +147,8 @@ const orderSchema = new mongoose.Schema({
     },
 
     // Timestamps
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('Order', orderSchema);

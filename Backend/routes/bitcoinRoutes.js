@@ -55,7 +55,7 @@ router.post('/opennode/webhook', express.raw({ type: 'application/json' }), asyn
     try {
         const event = req.body;
         if (event.status === 'paid') {
-            console.log('✅ OpenNode Payment Successful:', event.id);
+            console.log(' OpenNode Payment Successful:', event.id);
             // Update your database here
         }
         res.status(200).send('Webhook received');
@@ -125,7 +125,7 @@ router.post('/nowpayments/webhook', express.json(), async (req, res) => {
 
         if (signature === req.headers['x-nowpayments-sig']) {
             if (payload.payment_status === 'finished') {
-                console.log('✅ NOWPayments Payment Successful:', payload.payment_id);
+                console.log(' NOWPayments Payment Successful:', payload.payment_id);
             }
         }
 
@@ -215,7 +215,7 @@ router.post('/coinbase/webhook', express.raw({ type: 'application/json' }), asyn
             const event = JSON.parse(payload);
             
             if (event.event.type === 'charge:confirmed') {
-                console.log('✅ Coinbase Payment Confirmed:', event.event.data.id);
+                console.log(' Coinbase Payment Confirmed:', event.event.data.id);
             }
         }
 
@@ -284,7 +284,7 @@ router.post('/coingate/webhook', express.json(), async (req, res) => {
         const event = req.body;
         
         if (event.status === 'paid') {
-            console.log('✅ CoinGate Payment Successful:', event.id);
+            console.log(' CoinGate Payment Successful:', event.id);
         }
 
         res.status(200).send('OK');
@@ -348,7 +348,7 @@ router.post('/btcpay/webhook', express.json(), async (req, res) => {
         const event = req.body;
         
         if (event.type === 'InvoiceSettled') {
-            console.log('✅ BTCPay Payment Successful:', event.invoiceId);
+            console.log(' BTCPay Payment Successful:', event.invoiceId);
         }
 
         res.status(200).send('OK');

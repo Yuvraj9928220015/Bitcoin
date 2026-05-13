@@ -19,7 +19,7 @@ async function seedDefaultCoupon() {
             isActive: true,
             description: "Special 10% discount"
         });
-        console.log("✅ Default coupon inserted: NATALIE");
+        console.log(" Default coupon inserted: NATALIE");
     }
 
     // SAVE20 - Fixed $10 off on orders over $50, expires in 1 year, 100 uses
@@ -37,7 +37,7 @@ async function seedDefaultCoupon() {
             isActive: true,
             description: "Save $10 on orders over $50"
         });
-        console.log("✅ Default coupon inserted: SAVE20");
+        console.log(" Default coupon inserted: SAVE20");
     }
 
     // BIGSAVE - 25% off with max $40 discount on orders over $100
@@ -55,7 +55,7 @@ async function seedDefaultCoupon() {
             isActive: true,
             description: "25% off with max $40 discount on orders over $100"
         });
-        console.log("✅ Default coupon inserted: BIGSAVE");
+        console.log(" Default coupon inserted: BIGSAVE");
     }
 
     // FREESHIP - Free shipping (fixed $0 discount, can be used for free shipping logic on frontend)
@@ -73,7 +73,7 @@ async function seedDefaultCoupon() {
             isActive: true,
             description: "Free shipping on orders over $30"
         });
-        console.log("✅ Default coupon inserted: FREESHIP");
+        console.log(" Default coupon inserted: FREESHIP");
     }
 
     // WINTER15 - 15% off with an expiry date next month
@@ -93,7 +93,7 @@ async function seedDefaultCoupon() {
             isActive: true,
             description: "15% off all winter items, expires next month"
         });
-        console.log("✅ Default coupon inserted: WINTER15");
+        console.log(" Default coupon inserted: WINTER15");
     }
 
     // FLASH50 - Fixed $50 off on orders over $200 (limited time, high discount)
@@ -113,7 +113,7 @@ async function seedDefaultCoupon() {
             isActive: true,
             description: "Flash sale: $50 off on orders over $200"
         });
-        console.log("✅ Default coupon inserted: FLASH50");
+        console.log(" Default coupon inserted: FLASH50");
     }
 }
 seedDefaultCoupon();

@@ -67,6 +67,7 @@ exports.getBrowserInfo = async (req, res) => {
             cartCount: cartCount,
             timestamp: new Date().toISOString()
         });
+
     } catch (error) {
         console.error('Error getting browser info:', error);
         res.status(500).json({ message: 'Server Error', error: error.message });

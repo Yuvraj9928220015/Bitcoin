@@ -1,4 +1,4 @@
-require("dotenv").config(); // ✅ MUST
+require("dotenv").config(); // MUST
 
 const mongoose = require("mongoose");
 const Product = require("../models/productModel");
@@ -20,7 +20,7 @@ async function run() {
     }
   }
 
-  console.log("✅ All slugs updated");
+  console.log(" All slugs updated");
   process.exit();
 }
 
