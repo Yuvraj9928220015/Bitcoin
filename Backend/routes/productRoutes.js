@@ -15,13 +15,11 @@ const {
     deleteProduct
 } = require('../controllers/productController');
 
-// Ensure uploads folder exists
 const uploadPath = './uploads';
 if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath, { recursive: true });
 }
 
-// Configure multer storage
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './uploads/');
@@ -32,7 +30,6 @@ const storage = multer.diskStorage({
     }
 });
 
-// File filter function
 const fileFilter = (req, file, cb) => {
     const imageTypes = /jpeg|jpg|png|gif|webp/;
     const videoTypes = /mp4|mov|avi|wmv|mkv|flv|webm/;
@@ -55,7 +52,6 @@ const fileFilter = (req, file, cb) => {
     cb(new Error('Invalid file type or field name'));
 };
 
-// Configure multer
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
@@ -68,7 +64,6 @@ const upload = multer({
     { name: 'video', maxCount: 1 }
 ]);
 
-// Upload error middleware
 const handleUpload = (req, res, next) => {
     upload(req, res, (err) => {
         if (err) {

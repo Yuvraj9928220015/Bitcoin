@@ -7,7 +7,6 @@ const Coupon = require('../models/CouponModel');
 const SPEED_API_URL = 'https://api.tryspeed.com';
 const SPEED_API_KEY = process.env.SPEED_API_KEY;
 
-// ─── Create Speed Payment (Lightning Invoice) ───
 exports.createSpeedPayment = async (req, res) => {
     try {
         const {
@@ -29,7 +28,6 @@ exports.createSpeedPayment = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Customer info required.' });
         }
 
-        // ── Server-side price calculation ──
         let serverCalculatedSubtotal = items.reduce((sum, item) => {
             return sum + (parseFloat(item.price) * parseInt(item.quantity));
         }, 0);
@@ -105,7 +103,7 @@ exports.createSpeedPayment = async (req, res) => {
             },
             {
                 headers: {
-                    'x-api-key': SPEED_API_KEY,
+                    Authorization: `Bearer ${SPEED_API_KEY}`,
                     'Content-Type': 'application/json',
                     Accept: 'application/json'
                 },
@@ -192,7 +190,7 @@ exports.checkSpeedPaymentStatus = async (req, res) => {
             `${SPEED_API_URL}/payments/${paymentId}`,
             {
                 headers: {
-                    'x-api-key': SPEED_API_KEY,
+                    Authorization: `Bearer ${SPEED_API_KEY}`,
                     Accept: 'application/json'
                 },
                 httpsAgent: new https.Agent({
