@@ -45,11 +45,11 @@ exports.createSpeedPayment = async (req, res) => {
 
         const finalTotal = serverCalculatedSubtotal;
         // Speed amount in cents
-        const amountInCents = Math.round(finalTotal * 100);
+       const amountInCents = Math.round(finalTotal);
 
         console.log(`⚡ Creating Speed payment: $${finalTotal.toFixed(2)}`);
 
-        // ✅ CORRECT payload
+        // CORRECT payload
         const speedResponse = await axios.post(
             `${SPEED_API_URL}/checkout-sessions`,
             {
