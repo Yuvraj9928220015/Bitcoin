@@ -72,7 +72,7 @@ exports.createSpeedPayment = async (req, res) => {
         );
 
         const speedPayment = speedResponse.data;
-        console.log('✅ SPEED RESPONSE:', speedPayment.id);
+        console.log(' SPEED RESPONSE:', speedPayment.id);
 
         // Save order
         const orderNumber = `ORD-${Date.now()}`;
@@ -106,7 +106,7 @@ exports.createSpeedPayment = async (req, res) => {
             orderNumber,
             amount: finalTotal,
             ttl: speedPayment.ttl || 600,
-            // ✅ Checkout URL — user yahan se pay karega
+            // Checkout URL — user yahan se pay karega
             checkoutUrl: speedPayment.url,
             lightningInvoice: null // baad mein payments array se milega
         });

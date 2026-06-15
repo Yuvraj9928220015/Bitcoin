@@ -76,7 +76,7 @@ const CheckoutPage = () => {
             try {
                 const response = await axios.get(`${API_URL}/api/config/stripe`);
                 setStripeConfig(response.data);
-                console.log('✅ Stripe config loaded:', response.data);
+                console.log(' Stripe config loaded:', response.data);
             } catch (error) {
                 console.error('❌ Failed to load Stripe config:', error);
                 setPaymentStatus({

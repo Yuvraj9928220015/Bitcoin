@@ -105,14 +105,9 @@ const debugMiddleware = (req, res, next) => {
     next();
 };
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
-// ✅ FIX: Removed the duplicate /product/:slug route that conflicted with /name/:name
-// The /slug/:slug route below handles slug lookups via the controller cleanly.
-// IMPORTANT: More specific routes MUST come before /:id (which catches everything)
-
 router.get('/', getProducts);
 
-// ✅ Get by slug — used for SEO-friendly URLs (must be BEFORE /:id)
+// Get by slug — used for SEO-friendly URLs (must be BEFORE /:id)
 router.get('/slug/:slug', async (req, res) => {
     try {
         const product = await Product.findOne({ slug: req.params.slug });
@@ -125,10 +120,10 @@ router.get('/slug/:slug', async (req, res) => {
     }
 });
 
-// ✅ Get by name (must be BEFORE /:id)
+// Get by name (must be BEFORE /:id)
 router.get('/name/:name', getProductByName);
 
-// ✅ Get by MongoDB _id (must be LAST specific GET route)
+// Get by MongoDB _id (must be LAST specific GET route)
 router.get('/:id', getProductById);
 
 router.post('/', handleUpload, debugMiddleware, addProduct);

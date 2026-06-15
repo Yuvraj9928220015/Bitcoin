@@ -135,6 +135,7 @@ const verifyAuth = (req, res, next) => {
 
 // Import Routes
 const productRoutes = require('./routes/productRoutes');
+const blogRoutes = require('./routes/blogRoutes.js');
 const cartRoutes = require('./routes/cartRoutes');
 const contactRouter = require('./routes/contactRoutes');
 const checkoutRoutes = require('./routes/checkoutRoutes');
@@ -444,6 +445,7 @@ app.use('/api', checkoutRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/bitcoin', bitcoinRoutes);
+app.use('/api/blogs', blogRoutes);
 
 app.get('/api/products-protected', verifyAuth, (req, res) => {
     res.json({ message: 'Protected route - authenticated!' });
