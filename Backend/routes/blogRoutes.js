@@ -46,6 +46,7 @@ router.get("/migrate/add-fields", async (req, res) => {
         blog.script = "";
         changed = true;
       }
+      if (blog.altTag === undefined || blog.altTag === null) { blog.altTag = blog.title || ""; changed = true; }
 
       if (changed) {
         await blog.save();
@@ -62,7 +63,7 @@ router.get("/migrate/add-fields", async (req, res) => {
 // 1. CREATE NEW BLOG
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { title, author, content, pageTitle, metaDescription, urlHandle, script } = req.body;
+    const { title, author, content, pageTitle, metaDescription, urlHandle, script, altTag  } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({ success: false, message: "Title and Content are required!" });
@@ -77,6 +78,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       author: author || "Barosché",
       content,
       image: imageUrl,
+      altTag: altTag || title,
       pageTitle: pageTitle || title,
       metaDescription: metaDescription || "",
       urlHandle: urlHandle || slug,
@@ -129,6 +131,7 @@ router.put("/:slug", upload.single("image"), async (req, res) => {
     existingBlog.author = author || existingBlog.author;
     existingBlog.content = content || existingBlog.content;
     existingBlog.image = imageUrl;
+    existingBlog.altTag = altTag !== undefined ? altTag : existingBlog.altTag; 
     existingBlog.pageTitle = pageTitle || existingBlog.pageTitle;
     existingBlog.metaDescription = metaDescription || existingBlog.metaDescription;
     existingBlog.urlHandle = urlHandle || existingBlog.urlHandle;
