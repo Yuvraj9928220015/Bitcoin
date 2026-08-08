@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
     const register = async (name, email, password, phone) => {
         setAuthError(null); 
         try {
-            const response = await fetch('https://api.bitcoinbutik.com/api/auth/register', {
+            const response = await fetch('http://localhost:9000/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, email, password, phone }),
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         setAuthError(null);
         try {
-            const response = await fetch('https://api.bitcoinbutik.com/api/auth/login', {
+            const response = await fetch('http://localhost:9000/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),

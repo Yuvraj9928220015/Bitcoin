@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import './ProductList.css';
 
-const API_URL = 'https://api.bitcoinbutik.com';
+const API_URL = 'http://localhost:9000';
 const MAX_IMAGES = 10;
 
 const initialProductState = {

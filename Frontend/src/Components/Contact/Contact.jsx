@@ -47,7 +47,7 @@ export default function Contact() {
         };
 
         try {
-            const API_URL = 'https://api.bitcoinbutik.com/api/contact';
+            const API_URL = 'http://localhost:9000/api/contact';
 
             const response = await fetch(API_URL, {
                 method: 'POST',

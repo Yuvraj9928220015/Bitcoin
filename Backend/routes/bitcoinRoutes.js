@@ -28,7 +28,7 @@ router.post('/opennode/create-charge', async (req, res) => {
                 description: 'Bitcoin Payment - Bitcoine Jewelry',
                 customer_email: customerEmail || '',
                 success_url: 'https://bitcoinbutik.com/payment-success',
-                callback_url: 'https://api.bitcoinbutik.com/api/bitcoin/opennode/webhook',
+                callback_url: 'http://localhost:9000/api/bitcoin/opennode/webhook',
             },
             {
                 headers: {
@@ -85,7 +85,7 @@ router.post('/nowpayments/create-payment', async (req, res) => {
                 price_amount: amount,
                 price_currency: 'usd',
                 pay_currency: currency,
-                ipn_callback_url: 'https://api.bitcoinbutik.com/api/bitcoin/nowpayments/webhook',
+                ipn_callback_url: 'http://localhost:9000/api/bitcoin/nowpayments/webhook',
                 order_id: `ORDER_${Date.now()}`,
                 order_description: 'Bitcoine Jewelry Purchase',
                 success_url: 'https://bitcoinbutik.com/payment-success',
@@ -251,7 +251,7 @@ router.post('/coingate/create-order', async (req, res) => {
                 receive_currency: currency,
                 title: 'Bitcoine Jewelry Purchase',
                 description: 'Payment for jewelry items',
-                callback_url: 'https://api.bitcoinbutik.com/api/bitcoin/coingate/webhook',
+                callback_url: 'http://localhost:9000/api/bitcoin/coingate/webhook',
                 cancel_url: 'https://bitcoinbutik.com/checkout',
                 success_url: 'https://bitcoinbutik.com/payment-success',
                 purchaser_email: customerEmail

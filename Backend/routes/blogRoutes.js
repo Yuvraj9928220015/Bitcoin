@@ -11,17 +11,31 @@ if (!fs.existsSync("uploads")) {
 }
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "-"));
-  },
+  destination: (req, file, cb) => cb(null, "uploads/"),
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "-")),
 });
 
 const upload = multer({ storage });
 
+// Helper — pehle urlHandle se dhundo, phir slug se (backward compat)
+async function findBlog(identifier) {
+  if (!identifier) return null;
+  let blog = await Blog.findOne({ urlHandle: identifier });
+  if (!blog) blog = await Blog.findOne({ slug: identifier });
+  return blog;
+}
 
+// Clean urlHandle — lowercase, hyphens only
+function cleanHandle(str) {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
+// MIGRATE (run once) — purane blogs ko urlHandle set karo
 router.get("/migrate/add-fields", async (req, res) => {
   try {
     const blogs = await Blog.find();
@@ -29,29 +43,12 @@ router.get("/migrate/add-fields", async (req, res) => {
 
     for (const blog of blogs) {
       let changed = false;
-
-      if (!blog.pageTitle) {
-        blog.pageTitle = blog.title;
-        changed = true;
-      }
-      if (blog.metaDescription === undefined || blog.metaDescription === null) {
-        blog.metaDescription = "";
-        changed = true;
-      }
-      if (!blog.urlHandle) {
-        blog.urlHandle = blog.slug;
-        changed = true;
-      }
-      if (blog.script === undefined || blog.script === null) {
-        blog.script = "";
-        changed = true;
-      }
-      if (blog.altTag === undefined || blog.altTag === null) { blog.altTag = blog.title || ""; changed = true; }
-
-      if (changed) {
-        await blog.save();
-        updated++;
-      }
+      if (!blog.pageTitle) { blog.pageTitle = blog.title; changed = true; }
+      if (!blog.metaDescription) { blog.metaDescription = ""; changed = true; }
+      if (!blog.urlHandle) { blog.urlHandle = blog.slug; changed = true; }
+      if (!blog.script) { blog.script = ""; changed = true; }
+      if (!blog.altTag) { blog.altTag = blog.title || ""; changed = true; }
+      if (changed) { await blog.save(); updated++; }
     }
 
     res.json({ success: true, message: `${updated} blogs updated!` });
@@ -60,39 +57,48 @@ router.get("/migrate/add-fields", async (req, res) => {
   }
 });
 
-// 1. CREATE NEW BLOG
+// CREATE
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { title, author, content, pageTitle, metaDescription, urlHandle, script, altTag  } = req.body;
+    const { title, author, content, pageTitle, metaDescription, urlHandle, script, altTag } = req.body;
 
     if (!title || !content) {
-      return res.status(400).json({ success: false, message: "Title and Content are required!" });
+      return res.status(400).json({ success: false, message: "Title and Content required!" });
     }
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : "";
-    const slug = slugify(title, { lower: true, strict: true });
+    const autoSlug = slugify(title, { lower: true, strict: true });
+    const finalHandle = urlHandle ? cleanHandle(urlHandle) : autoSlug;
+
+    const exists = await Blog.findOne({ urlHandle: finalHandle });
+    if (exists) {
+      return res.status(400).json({
+        success: false,
+        message: "Yeh URL handle already exist karta hai. Koi aur choose karo.",
+      });
+    }
 
     const newBlog = new Blog({
       title,
-      slug,
-      author: author || "Barosché",
+      slug: autoSlug,
+      author: author || "Barosche",
       content,
       image: imageUrl,
       altTag: altTag || title,
       pageTitle: pageTitle || title,
       metaDescription: metaDescription || "",
-      urlHandle: urlHandle || slug,
+      urlHandle: finalHandle,
       script: script || "",
     });
 
-    const savedBlog = await newBlog.save();
-    res.status(201).json({ success: true, message: "Blog saved successfully!", blog: savedBlog });
+    const saved = await newBlog.save();
+    res.status(201).json({ success: true, message: "Blog saved!", blog: saved });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error saving blog", error: error.message });
   }
 });
 
-// 2. GET ALL BLOGS
+// GET ALL
 router.get("/", async (req, res) => {
   try {
     const blogs = await Blog.find().sort({ createdAt: -1 });
@@ -102,56 +108,65 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 3. GET SINGLE BLOG
-router.get("/:slug", async (req, res) => {
+// GET ONE — urlHandle ya slug dono se
+router.get("/:identifier", async (req, res) => {
   try {
-    const blog = await Blog.findOne({ slug: req.params.slug });
-    if (!blog) {
-      return res.status(404).json({ message: "Blog not found" });
-    }
+    const blog = await findBlog(req.params.identifier);
+    if (!blog) return res.status(404).json({ message: "Blog not found" });
     res.status(200).json(blog);
   } catch (error) {
     res.status(500).json({ message: "Error fetching blog", error: error.message });
   }
 });
 
-// 4. UPDATE BLOG
-router.put("/:slug", upload.single("image"), async (req, res) => {
+// UPDATE
+router.put("/:identifier", upload.single("image"), async (req, res) => {
   try {
-    const { title, author, content, pageTitle, metaDescription, urlHandle, script } = req.body;
-    const existingBlog = await Blog.findOne({ slug: req.params.slug });
+    const { title, author, content, pageTitle, metaDescription, urlHandle, script, altTag } = req.body;
 
-    if (!existingBlog) {
-      return res.status(404).json({ success: false, message: "Blog not found" });
+    const blog = await findBlog(req.params.identifier);
+    if (!blog) return res.status(404).json({ success: false, message: "Blog not found" });
+
+    if (urlHandle) {
+      const newHandle = cleanHandle(urlHandle);
+      if (newHandle !== blog.urlHandle) {
+        const conflict = await Blog.findOne({ urlHandle: newHandle, _id: { $ne: blog._id } });
+        if (conflict) {
+          return res.status(400).json({ success: false, message: "Yeh URL handle already exist karta hai." });
+        }
+        blog.urlHandle = newHandle;
+      }
     }
 
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : existingBlog.image;
+    blog.title = title || blog.title;
+    blog.author = author || blog.author;
+    blog.content = content || blog.content;
+    blog.image = req.file ? `/uploads/${req.file.filename}` : blog.image;
+    blog.altTag = altTag !== undefined ? altTag : blog.altTag;
+    blog.pageTitle = pageTitle || blog.pageTitle;
+    blog.metaDescription = metaDescription !== undefined ? metaDescription : blog.metaDescription;
+    blog.script = script !== undefined ? script : blog.script;
 
-    existingBlog.title = title || existingBlog.title;
-    existingBlog.author = author || existingBlog.author;
-    existingBlog.content = content || existingBlog.content;
-    existingBlog.image = imageUrl;
-    existingBlog.altTag = altTag !== undefined ? altTag : existingBlog.altTag; 
-    existingBlog.pageTitle = pageTitle || existingBlog.pageTitle;
-    existingBlog.metaDescription = metaDescription || existingBlog.metaDescription;
-    existingBlog.urlHandle = urlHandle || existingBlog.urlHandle;
-    existingBlog.script = script || existingBlog.script;
-
-    const updatedBlog = await existingBlog.save();
-    res.status(200).json({ success: true, message: "Blog updated successfully!", blog: updatedBlog });
+    const updated = await blog.save();
+    res.status(200).json({
+      success: true,
+      message: "Blog updated!",
+      blog: updated,
+      newSlug: updated.urlHandle,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error updating blog", error: error.message });
   }
 });
 
-// 5. DELETE BLOG
-router.delete("/:slug", async (req, res) => {
+// DELETE
+router.delete("/:identifier", async (req, res) => {
   try {
-    const deleted = await Blog.findOneAndDelete({ slug: req.params.slug });
-    if (!deleted) {
-      return res.status(404).json({ success: false, message: "Blog not found" });
-    }
-    res.status(200).json({ success: true, message: "Blog deleted successfully!" });
+    const blog = await findBlog(req.params.identifier);
+    if (!blog) return res.status(404).json({ success: false, message: "Blog not found" });
+
+    await Blog.findByIdAndDelete(blog._id);
+    res.status(200).json({ success: true, message: "Blog deleted!" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error deleting blog", error: error.message });
   }

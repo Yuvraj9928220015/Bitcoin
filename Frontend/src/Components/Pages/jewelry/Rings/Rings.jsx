@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-const API_URL = 'https://api.bitcoinbutik.com';
+const API_URL = 'http://localhost:9000';
 import "./RingsDetail.css"
 
 const ProductCard = ({ product }) => {

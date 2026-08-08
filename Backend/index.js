@@ -160,7 +160,7 @@ app.get('/health', (req, res) => {
             coinbase: !!process.env.COINBASE_COMMERCE_API_KEY,
             coingate: !!process.env.COINGATE_API_KEY,
             btcpay: !!process.env.BTCPAY_API_KEY,
-            speed: !!process.env.SPEED_API_KEY  // Speed add है
+            speed: !!process.env.SPEED_API_KEY
         },
         couponsActive: true,
         timestamp: new Date().toISOString()

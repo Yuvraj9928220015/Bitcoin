@@ -248,7 +248,7 @@ const Navbar = () => {
 
     const fetchUserData = async (token) => {
         try {
-            const response = await fetch('https://api.bitcoinbutik.com/api/auth/me', {
+            const response = await fetch('http://localhost:9000/api/auth/me', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -312,7 +312,7 @@ const Navbar = () => {
         setLoginError('');
 
         try {
-            const response = await fetch('https://api.bitcoinbutik.com/api/auth/login', {
+            const response = await fetch('http://localhost:9000/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -360,7 +360,7 @@ const Navbar = () => {
         }
 
         try {
-            const response = await fetch('https://api.bitcoinbutik.com/api/auth/register', {
+            const response = await fetch('http://localhost:9000/api/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

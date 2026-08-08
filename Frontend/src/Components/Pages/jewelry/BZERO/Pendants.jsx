@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import "./Pendants.css";
 import Seo from '../../../Seo/Seo';
 
-const API_URL = 'https://api.bitcoinbutik.com';
+const API_URL = 'http://localhost:9000';
 
 const ProductCard = ({ product }) => {
     const [isHovered, setIsHovered] = useState(false);

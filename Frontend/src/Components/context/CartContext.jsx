@@ -4,7 +4,7 @@ const CartContext = createContext();
 
 export const useCart = () => useContext(CartContext);
 
-const API_URL = 'https://api.bitcoinbutik.com/api/cart';
+const API_URL = 'http://localhost:9000/api/cart';
 
 const generateBrowserId = () => {
     let browserId = localStorage.getItem('bitcoine_browser_id');

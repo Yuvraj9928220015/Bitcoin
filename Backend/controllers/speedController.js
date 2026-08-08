@@ -45,7 +45,7 @@ exports.createSpeedPayment = async (req, res) => {
 
         const finalTotal = serverCalculatedSubtotal;
         // Speed amount in cents
-       const amountInCents = Math.round(finalTotal);
+        const amountInCents = Math.round(finalTotal);
 
         console.log(`⚡ Creating Speed payment: $${finalTotal.toFixed(2)}`);
 
@@ -106,9 +106,8 @@ exports.createSpeedPayment = async (req, res) => {
             orderNumber,
             amount: finalTotal,
             ttl: speedPayment.ttl || 600,
-            // Checkout URL — user yahan se pay karega
             checkoutUrl: speedPayment.url,
-            lightningInvoice: null // baad mein payments array se milega
+            lightningInvoice: null
         });
 
     } catch (error) {
@@ -121,7 +120,6 @@ exports.createSpeedPayment = async (req, res) => {
     }
 };
 
-// CHECK PAYMENT STATUS
 exports.checkSpeedPaymentStatus = async (req, res) => {
     try {
         const { paymentId } = req.params;
@@ -133,10 +131,21 @@ exports.checkSpeedPaymentStatus = async (req, res) => {
             }
         );
         const speedPayment = speedResponse.data;
+        const isPaid = speedPayment.status === 'paid';
+
+        if (isPaid) {
+            const order = await Order.findOne({ speedPaymentId: paymentId });
+            if (order && order.paymentStatus !== 'succeeded') {
+                order.paymentStatus = 'succeeded';
+                await order.save();
+                console.log(`Order ${order.orderNumber} marked as succeeded (via status check)`);
+            }
+        }
+
         return res.status(200).json({
             success: true,
             status: speedPayment.status,
-            isPaid: speedPayment.status === 'paid'
+            isPaid
         });
     } catch (error) {
         console.error('❌ Speed status error:', error.response?.data || error.message);
@@ -147,7 +156,43 @@ exports.checkSpeedPaymentStatus = async (req, res) => {
     }
 };
 
-// WEBHOOK
 exports.speedWebhook = async (req, res) => {
-    return res.status(200).json({ received: true });
+    try {
+        const event = req.body;
+
+        console.log('⚡ Speed webhook received:', event?.event_type);
+
+        // Events jo batate hain ki payment successfully ho gayi
+        const paidEvents = ['checkout_session.paid', 'checkout_session.payment_paid'];
+
+        if (event && paidEvents.includes(event.event_type)) {
+            const sessionObject = event.data?.object;
+
+            const checkoutSessionId = sessionObject?.id || sessionObject?.checkout_session_id;
+
+            if (checkoutSessionId) {
+                const order = await Order.findOne({ speedPaymentId: checkoutSessionId });
+
+                if (order) {
+                    if (order.paymentStatus !== 'succeeded') {
+                        order.paymentStatus = 'succeeded';
+                        await order.save();
+                        console.log(` Order ${order.orderNumber} marked as succeeded via webhook`);
+                    } else {
+                        console.log(` Order ${order.orderNumber} already marked succeeded, skipping`);
+                    }
+                } else {
+                    console.warn(` No order found for speedPaymentId: ${checkoutSessionId}`);
+                }
+            } else {
+                console.warn(' Webhook event missing checkout session id:', JSON.stringify(event.data));
+            }
+        }
+
+        return res.status(200).json({ received: true });
+    } catch (error) {
+        console.error('❌ Speed webhook error:', error.message);
+        // Phir bhi 200 bhejo taaki Speed unnecessary retries na kare
+        return res.status(200).json({ received: true });
+    }
 };
