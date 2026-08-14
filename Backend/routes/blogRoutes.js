@@ -19,18 +19,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-<<<<<<< HEAD
-// Helper — pehle urlHandle se dhundo, phir slug se (backward compat)
-=======
->>>>>>> 6309f84 (14-8-26)
 async function findBlog(identifier) {
   if (!identifier) return null;
   let blog = await Blog.findOne({ urlHandle: identifier });
   if (!blog) blog = await Blog.findOne({ slug: identifier });
   return blog;
 }
-<<<<<<< HEAD
-=======
 
 function cleanHandle(str) {
   return str
@@ -51,18 +45,7 @@ router.post("/upload-image", upload.single("image"), (req, res) => {
     res.status(500).json({ success: false, message: "Image upload failed", error: error.message });
   }
 });
->>>>>>> 6309f84 (14-8-26)
 
-// Clean urlHandle — lowercase, hyphens only
-function cleanHandle(str) {
-  return str
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-}
-
-// MIGRATE (run once) — purane blogs ko urlHandle set karo
 router.get("/migrate/add-fields", async (req, res) => {
   try {
     const blogs = await Blog.find();
@@ -108,11 +91,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     const newBlog = new Blog({
       title,
       slug: autoSlug,
-<<<<<<< HEAD
-      author: author || "Barosche",
-=======
       author: author || "Bitcoin Butik",
->>>>>>> 6309f84 (14-8-26)
       content,
       image: imageUrl,
       altTag: altTag || title,
@@ -139,10 +118,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-// GET ONE — urlHandle ya slug dono se
-=======
->>>>>>> 6309f84 (14-8-26)
 router.get("/:identifier", async (req, res) => {
   try {
     const blog = await findBlog(req.params.identifier);
