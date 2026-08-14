@@ -8,5 +8,4 @@ router.post('/', createContactMessage);
 
 router.get('/', protect, getAllContactMessages);
 
-
 module.exports = router;

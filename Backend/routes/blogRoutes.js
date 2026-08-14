@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const slugify = require("slugify");
 const fs = require("fs");
+const path = require("path");
 const Blog = require("../models/Blog.js");
 
 const router = express.Router();
@@ -18,13 +19,39 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+<<<<<<< HEAD
 // Helper — pehle urlHandle se dhundo, phir slug se (backward compat)
+=======
+>>>>>>> 6309f84 (14-8-26)
 async function findBlog(identifier) {
   if (!identifier) return null;
   let blog = await Blog.findOne({ urlHandle: identifier });
   if (!blog) blog = await Blog.findOne({ slug: identifier });
   return blog;
 }
+<<<<<<< HEAD
+=======
+
+function cleanHandle(str) {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
+router.post("/upload-image", upload.single("image"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Image required!" });
+    }
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.status(200).json({ url: imageUrl });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Image upload failed", error: error.message });
+  }
+});
+>>>>>>> 6309f84 (14-8-26)
 
 // Clean urlHandle — lowercase, hyphens only
 function cleanHandle(str) {
@@ -81,7 +108,11 @@ router.post("/", upload.single("image"), async (req, res) => {
     const newBlog = new Blog({
       title,
       slug: autoSlug,
+<<<<<<< HEAD
       author: author || "Barosche",
+=======
+      author: author || "Bitcoin Butik",
+>>>>>>> 6309f84 (14-8-26)
       content,
       image: imageUrl,
       altTag: altTag || title,
@@ -108,7 +139,10 @@ router.get("/", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 // GET ONE — urlHandle ya slug dono se
+=======
+>>>>>>> 6309f84 (14-8-26)
 router.get("/:identifier", async (req, res) => {
   try {
     const blog = await findBlog(req.params.identifier);

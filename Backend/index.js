@@ -143,6 +143,7 @@ const registerAuthRoutes = require('./routes/RegisterRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const couponRoutes = require('./routes/couponRouter');
 const bitcoinRoutes = require('./routes/bitcoinRoutes');
+const affiliateRoute = require("./routes/affiliateRoute");
 
 // Basic Routes
 app.get('/', (req, res) => res.send('Bitcoine API is running'));
@@ -446,6 +447,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/bitcoin', bitcoinRoutes);
 app.use('/api/blogs', blogRoutes);
+app.use("/api/affiliate", affiliateRoute);
 
 app.get('/api/products-protected', verifyAuth, (req, res) => {
     res.json({ message: 'Protected route - authenticated!' });

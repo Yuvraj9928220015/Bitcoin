@@ -5,7 +5,7 @@ const blogSchema = new mongoose.Schema({
   slug: { type: String, required: true, unique: true },
   author: { type: String, required: true, default: "Barosché" },
   image: { type: String, required: true },
-  altTag: { type: String, default: "" }, // ✅ NEW
+  altTag: { type: String, default: "" },
   content: { type: String, required: true },
   pageTitle: { type: String, default: "" },
   metaDescription: { type: String, default: "" },

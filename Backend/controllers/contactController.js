@@ -1,33 +1,43 @@
 const Contact = require('../models/contact');
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
 
 const createContactMessage = async (req, res) => {
     try {
-        const {
-            firstName,
-            lastName,
-            email,
-            phone,
-            country,
-            subject,
-            message
-        } = req.body;
+        const { firstName, lastName, email, phone, country, subject, message } = req.body;
 
         if (!firstName || !lastName || !email || !phone || !country || !subject || !message) {
             return res.status(400).json({ message: 'Please fill in all required fields.' });
         }
 
-        const newContact = new Contact({
-            firstName,
-            lastName,
-            email,
-            phone,
-            country,
-            subject,
-            message
-        });
-
+        const newContact = new Contact({ firstName, lastName, email, phone, country, subject, message });
         const savedContact = await newContact.save();
 
+        const NOTIFY_EMAIL = "dailyreport015@gmail.com";
+
+        await transporter.sendMail({
+            from: `"BitcoinButik Website" <${process.env.EMAIL_USER}>`,
+            to: NOTIFY_EMAIL,
+            replyTo: email,
+            subject: `New Contact Form Submission: ${subject}`,
+            html: `
+                <h2>New Contact Form Submission</h2>
+                <p><strong>Name:</strong> ${firstName} ${lastName}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Phone:</strong> ${phone}</p>
+                <p><strong>Country:</strong> ${country}</p>
+                <p><strong>Subject:</strong> ${subject}</p>
+                <p><strong>Message:</strong></p>
+                <p>${message}</p>
+            `,
+        });
 
         res.status(201).json({
             success: true,
