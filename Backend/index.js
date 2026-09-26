@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const Stripe = require("stripe");
 const path = require('path');
-const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const cookieParser = require('cookie-parser');
@@ -59,7 +58,7 @@ mongoose.connect(MONGO_URL)
         console.log(" Mongoose Connected to MongoDB");
         console.log(` Connected to database: ${mongoose.connection.name}`);
     })
-    .catch(error => console.error("❌ Database Connection Error:", error));
+    .catch(error => console.error("Database Connection Error:", error));
 
 const Register = require('./models/Register');
 const Coupon = require('./models/CouponModel');
@@ -75,14 +74,6 @@ const userSchema = new mongoose.Schema({
     newsletterAgreed: { type: Boolean, default: false },
 }, { timestamps: true });
 const User = mongoose.model('User', userSchema);
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
-});
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'bitcoine_browser_cart_secret_change_in_production',
@@ -281,164 +272,6 @@ app.get('/api/contact-info', (req, res) => {
     });
 });
 
-app.post("/api/payment", async (req, res) => {
-    let { amount, id, paymentMethodId, browserId, customerInfo, items, note, appliedCoupon } = req.body;
-
-    console.log("=== STRIPE PAYMENT REQUEST ===");
-    console.log("Amount:", amount);
-    console.log("Applied Coupon:", appliedCoupon);
-
-    const finalPaymentMethodId = paymentMethodId || id;
-
-    if (!amount || !finalPaymentMethodId) {
-        return res.status(400).json({
-            message: "Amount and payment method required",
-            success: false
-        });
-    }
-
-    if (amount < 50) {
-        return res.status(400).json({
-            message: "Minimum amount is $0.50",
-            success: false
-        });
-    }
-
-    try {
-        const serverCalculatedSubtotal = items.reduce((sum, item) => {
-            return sum + (parseFloat(item.price) * parseInt(item.quantity));
-        }, 0);
-
-        console.log("Server subtotal:", serverCalculatedSubtotal);
-
-        let discountAmount = 0;
-        let validatedCoupon = null;
-
-        if (appliedCoupon && appliedCoupon.code) {
-            console.log("Validating coupon:", appliedCoupon.code);
-
-            const coupon = await Coupon.findOne({
-                code: appliedCoupon.code.toUpperCase(),
-                isActive: true
-            });
-
-            if (coupon) {
-                if (coupon.expiryDate && new Date() > coupon.expiryDate) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Coupon has expired'
-                    });
-                }
-                if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Coupon usage limit reached'
-                    });
-                }
-                if (serverCalculatedSubtotal < coupon.minOrderAmount) {
-                    return res.status(400).json({
-                        success: false,
-                        message: `Minimum order of $${coupon.minOrderAmount} required`
-                    });
-                }
-                if (coupon.discountType === 'percentage') {
-                    discountAmount = (serverCalculatedSubtotal * coupon.discountValue) / 100;
-                    if (coupon.maxDiscountAmount && discountAmount > coupon.maxDiscountAmount) {
-                        discountAmount = coupon.maxDiscountAmount;
-                    }
-                } else if (coupon.discountType === 'fixed') {
-                    discountAmount = Math.min(coupon.discountValue, serverCalculatedSubtotal);
-                }
-
-                validatedCoupon = {
-                    code: coupon.code,
-                    discountType: coupon.discountType,
-                    discountValue: coupon.discountValue,
-                    discountAmount: discountAmount
-                };
-
-                console.log(" Coupon validated:", validatedCoupon);
-
-                await Coupon.findOneAndUpdate(
-                    { code: coupon.code },
-                    { $inc: { usedCount: 1 } }
-                );
-            }
-        }
-
-        const finalTotal = serverCalculatedSubtotal - discountAmount;
-        const finalAmountInCents = Math.round(finalTotal * 100);
-
-        console.log("Final amount after discount:", finalTotal);
-        console.log("Amount in cents:", finalAmountInCents);
-
-        const payment = await stripe.paymentIntents.create({
-            amount: finalAmountInCents,
-            currency: "usd",
-            description: `Bitcoine Jewelry - ${customerInfo?.email}`,
-            payment_method: finalPaymentMethodId,
-            confirm: true,
-            return_url: "https://bitcoinbutik.com/payment-success",
-            metadata: {
-                browserId: browserId || 'unknown',
-                customerName: `${customerInfo?.firstName} ${customerInfo?.lastName}`,
-                customerEmail: customerInfo?.email || '',
-                couponCode: validatedCoupon ? validatedCoupon.code : 'none',
-                discountAmount: discountAmount.toFixed(2),
-                originalAmount: serverCalculatedSubtotal.toFixed(2)
-            },
-            receipt_email: customerInfo?.email || null
-        });
-
-        console.log(" STRIPE PAYMENT SUCCESSFUL!");
-        console.log("Payment ID:", payment.id);
-
-        if (transporter && customerInfo?.email) {
-            try {
-                await transporter.sendMail({
-                    from: process.env.EMAIL_USER,
-                    to: customerInfo.email,
-                    cc: process.env.EMAIL_RECEIVER,
-                    subject: `Order Confirmation #${payment.id.substring(payment.id.length - 8)}`,
-                    html: `
-                        <h2>Thank you for your order!</h2>
-                        <p>Dear ${customerInfo.firstName} ${customerInfo.lastName},</p>
-                        <p>Payment: <strong>$${(finalAmountInCents / 100).toFixed(2)}</strong></p>
-                        ${validatedCoupon ? `<p>Discount (${validatedCoupon.code}): -$${discountAmount.toFixed(2)}</p>` : ''}
-                        <p>Payment ID: ${payment.id}</p>
-                        <p>Status: Confirmed</p>
-                    `
-                });
-                console.log(" Email sent");
-            } catch (emailError) {
-                console.error("Email error:", emailError.message);
-            }
-        }
-
-        res.json({
-            message: "Payment successful!",
-            success: true,
-            paymentId: payment.id,
-            amount: finalAmountInCents,
-            customerEmail: customerInfo?.email,
-            appliedDiscount: discountAmount > 0 ? {
-                code: validatedCoupon.code,
-                amount: discountAmount
-            } : null
-        });
-
-    } catch (error) {
-        console.error("Payment Error:", error);
-        res.status(400).json({
-            message: error.message || "Payment failed",
-            success: false
-        });
-    }
-});
-
-// ============================================
-// REGISTER ALL ROUTES
-// ============================================
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/contact', contactRouter);
@@ -500,7 +333,6 @@ app.listen(PORT, () => {
     }
 });
 
-// Graceful Shutdown
 const gracefulShutdown = async (signal) => {
     console.log(`${signal} received. Shutting down...`);
     try {

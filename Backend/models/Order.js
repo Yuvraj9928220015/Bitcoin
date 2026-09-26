@@ -32,6 +32,10 @@ const productItemSchema = new mongoose.Schema({
     size:
     {
         type: String
+    },
+    type:
+    {
+        type: String
     }
 });
 
@@ -108,10 +112,8 @@ const orderSchema = new mongoose.Schema({
         type: String
     },
 
-    // CHANGE 1: required: true → hata diya (Lightning payment mein card ID nahi hoti)
     paymentMethodId: { type: String },
 
-    // CHANGE 2: paymentMethod field ADD kiya (card ya lightning)
     paymentMethod: {
         type: String,
         enum: ['card', 'bitcoin_lightning'],
@@ -125,10 +127,8 @@ const orderSchema = new mongoose.Schema({
     },
     stripeChargeId: { type: String },
 
-    // CHANGE 3: speedPaymentId field ADD kiya (Speed Lightning payment ID)
     speedPaymentId: { type: String, default: null, index: true },
 
-    // Coupon fields (pehle se hai toh theek, nahi hai toh add karo)
     couponUsed: { type: String, default: null },
     appliedDiscountsDetails: [{
         code: String,
@@ -146,7 +146,6 @@ const orderSchema = new mongoose.Schema({
         zip: { type: String }
     },
 
-    // Timestamps
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });

@@ -3,12 +3,11 @@ const AffiliateApplication = require("../models/AffiliateApplication");
 
 const NOTIFY_EMAIL = "dailyreport015@gmail.com";
 
-// Reuse a single transporter instance (Gmail SMTP, same pattern as JC Drink contact form)
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-        user: process.env.EMAIL_USER, // your Gmail address
-        pass: process.env.EMAIL_PASS, // Gmail App Password (not your normal password)
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
 });
 
@@ -71,7 +70,6 @@ const submitAffiliateApplication = async (req, res) => {
             otherBrands,
         } = req.body;
 
-        // Basic server-side validation
         if (
             !fullName?.trim() ||
             !email?.trim() ||
@@ -112,7 +110,6 @@ const submitAffiliateApplication = async (req, res) => {
         // 1. Save to DB
         const savedApplication = await AffiliateApplication.create(applicationData);
 
-        // 2. Send email to admin/notify address
         const adminMail = transporter.sendMail({
             from: `"Bitcoin Butik Affiliate" <${process.env.EMAIL_USER}>`,
             to: NOTIFY_EMAIL,
@@ -120,7 +117,6 @@ const submitAffiliateApplication = async (req, res) => {
             html: buildAdminEmailHtml(applicationData),
         });
 
-        // 3. Send confirmation email to the applicant
         const applicantMail = transporter.sendMail({
             from: `"Bitcoin Butik" <${process.env.EMAIL_USER}>`,
             to: applicationData.email,

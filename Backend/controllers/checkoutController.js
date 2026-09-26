@@ -1,11 +1,12 @@
-// controllers/orderController.js
+// controllers/checkoutController.js
 const Order = require('../models/Order');
 const Coupon = require('../models/CouponModel');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const { sendOrderEmails } = require('../utils/mailer');
 
 exports.placeOrder = async (req, res) => {
     try {
-        console.log('📥 Received payment request');
+        console.log(' Received payment request');
 
         const {
             amount,
@@ -41,8 +42,8 @@ exports.placeOrder = async (req, res) => {
         }, 0);
 
         const originalSubtotal = serverCalculatedSubtotal;
-        console.log("Order Amount (frontend):", (amount / 100).toFixed(2));
-        console.log("Server Original Subtotal:", originalSubtotal.toFixed(2));
+        console.log('Order Amount (frontend):', (amount / 100).toFixed(2));
+        console.log('Server Original Subtotal:', originalSubtotal.toFixed(2));
 
         let totalDiscountAmount = 0;
         const appliedValidCoupons = [];
@@ -67,7 +68,6 @@ exports.placeOrder = async (req, res) => {
 
             for (const coupon of sortedCouponsToApply) {
                 try {
-
                     const latestCoupon = await Coupon.findById(coupon._id);
 
                     if (!latestCoupon) {
@@ -113,7 +113,7 @@ exports.placeOrder = async (req, res) => {
                             discountValue: latestCoupon.discountValue,
                             discountAmount: currentCouponDiscount
                         });
-                        console.log(`✅ Coupon applied: ${latestCoupon.code}, Discount: $${currentCouponDiscount.toFixed(2)}, New Running Total: $${serverCalculatedSubtotal.toFixed(2)}`);
+                        console.log(`Coupon applied: ${latestCoupon.code}, Discount: $${currentCouponDiscount.toFixed(2)}, New Running Total: $${serverCalculatedSubtotal.toFixed(2)}`);
                     } else {
                         console.warn(`  - ${latestCoupon.code}: No discount applied (either 0 or invalid conditions).`);
                     }
@@ -128,16 +128,15 @@ exports.placeOrder = async (req, res) => {
         const finalTotal = serverCalculatedSubtotal;
         const finalAmountInCents = Math.round(finalTotal * 100);
 
-        console.log('💵 Final amount after all discounts:', finalTotal.toFixed(2));
-        console.log('💳 Amount in cents for Stripe:', finalAmountInCents);
+        console.log('Final amount after all discounts:', finalTotal.toFixed(2));
+        console.log('Amount in cents for Stripe:', finalAmountInCents);
 
         if (Math.abs(amount - finalAmountInCents) > 10) {
-            console.warn(`⚠️ Frontend amount mismatch! Frontend: ${amount}, Backend Calculated: ${finalAmountInCents}. Using backend calculated amount for Stripe.`);
+            console.warn(`Frontend amount mismatch! Frontend: ${amount}, Backend Calculated: ${finalAmountInCents}. Using backend calculated amount for Stripe.`);
         }
 
-
-        console.log('✅ Validation passed');
-        console.log('💳 Creating PaymentIntent...');
+        console.log('Validation passed');
+        console.log('Creating PaymentIntent...');
 
         const paymentIntent = await stripe.paymentIntents.create({
             amount: finalAmountInCents,
@@ -171,68 +170,73 @@ exports.placeOrder = async (req, res) => {
             },
         });
 
-        console.log('💳 PaymentIntent created:', paymentIntent.id);
-        console.log('📊 Payment Status:', paymentIntent.status);
+        console.log('PaymentIntent created:', paymentIntent.id);
+        console.log('Payment Status:', paymentIntent.status);
 
-        if (paymentIntent.status === 'succeeded') {
-            const newOrder = new Order({
-                customerInfo: customerInfo,
-                items: items.map(item => ({
-                    productId: item.productId || item.id,
-                    name: item.name,
-                    image: item.image,
-                    price: parseFloat(item.price),
-                    quantity: parseInt(item.quantity),
-                    size: item.size || undefined
-                })),
-                subtotal: originalSubtotal,
-                discountAmount: totalDiscountAmount,
-                finalTotal: finalTotal,
-                note: note || '',
-                paymentMethodId: finalPaymentMethodId,
-                paymentStatus: 'succeeded',
-                stripeChargeId: paymentIntent.id,
-                couponUsed: appliedValidCoupons.map(c => c.code).join(', ') || null,
-                appliedDiscountsDetails: appliedValidCoupons,
-                shippingDetails: {
-                    country: customerInfo.country || 'US',
-                    state: customerInfo.state,
-                    city: customerInfo.city,
-                    zip: customerInfo.zip
-                },
-                createdAt: new Date(),
-                orderNumber: `ORD-${Date.now()}`
-            });
-
-            await newOrder.save();
-            console.log('✅ Order saved:', newOrder._id);
-
-            for (const validCoupon of appliedValidCoupons) {
-                await Coupon.findOneAndUpdate(
-                    { code: validCoupon.code },
-                    { $inc: { usedCount: 1 } }
-                );
-                console.log(`✅ Coupon usage incremented for: ${validCoupon.code}`);
-            }
-
-            return res.status(200).json({
-                success: true,
-                message: 'Payment successful!',
-                paymentId: paymentIntent.id,
-                amount: paymentIntent.amount,
-                orderId: newOrder._id,
-                orderNumber: newOrder.orderNumber,
-                customerEmail: customerInfo.email,
-                appliedDiscounts: appliedValidCoupons
-            });
-
-        } else {
-            console.error('❌ Payment not succeeded. Status:', paymentIntent.status);
+        if (paymentIntent.status !== 'succeeded') {
+            console.error('Payment not succeeded. Status:', paymentIntent.status);
             return res.status(400).json({
                 success: false,
                 message: `Payment status: ${paymentIntent.status}`
             });
         }
+
+        const newOrder = new Order({
+            customerInfo: customerInfo,
+            items: items.map(item => ({
+                productId: item.productId || item.id,
+                name: item.name,
+                image: item.image,
+                price: parseFloat(item.price),
+                quantity: parseInt(item.quantity),
+                size: item.size || undefined,
+                type: item.type || undefined
+            })),
+            subtotal: originalSubtotal,
+            discountAmount: totalDiscountAmount,
+            finalTotal: finalTotal,
+            note: note || '',
+            paymentMethodId: finalPaymentMethodId,
+            paymentMethod: 'card',
+            paymentStatus: 'succeeded',
+            stripeChargeId: paymentIntent.id,
+            couponUsed: appliedValidCoupons.map(c => c.code).join(', ') || null,
+            appliedDiscountsDetails: appliedValidCoupons,
+            shippingDetails: {
+                country: customerInfo.country || 'US',
+                state: customerInfo.state,
+                city: customerInfo.city,
+                zip: customerInfo.zip
+            },
+            createdAt: new Date(),
+            orderNumber: `ORD-${Date.now()}`
+        });
+
+        await newOrder.save();
+        console.log('Order saved:', newOrder._id);
+
+        for (const validCoupon of appliedValidCoupons) {
+            await Coupon.findOneAndUpdate(
+                { code: validCoupon.code },
+                { $inc: { usedCount: 1 } }
+            );
+            console.log(`Coupon usage incremented for: ${validCoupon.code}`);
+        }
+
+        sendOrderEmails(newOrder.toObject())
+            .then((result) => console.log('📧 Order email results:', result))
+            .catch((err) => console.error('📧 sendOrderEmails crashed:', err.message));
+
+        return res.status(200).json({
+            success: true,
+            message: 'Payment successful!',
+            paymentId: paymentIntent.id,
+            amount: paymentIntent.amount,
+            orderId: newOrder._id,
+            orderNumber: newOrder.orderNumber,
+            customerEmail: customerInfo.email,
+            appliedDiscounts: appliedValidCoupons
+        });
 
     } catch (error) {
         console.error('❌ Payment Error:', error.message);
